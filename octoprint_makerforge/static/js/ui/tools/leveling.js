@@ -84,7 +84,7 @@ export function levelingPanel(host) {
     r.qgl.innerHTML = q
       ? `<span class="chip ${q.ok ? "is-ok" : "is-warn"}">${q.ok ? "Within tolerance" : "Out of tolerance"}</span>
          <span class="big">${q.range.toFixed(4)} mm</span>
-         <span class="muted">range · tolerance ${q.tolerance.toFixed(4)} mm · ${q.retries} of ${q.maxRetries} retries used</span>
+         <span class="muted">range, tolerance ${q.tolerance.toFixed(4)} mm, ${q.retries} of ${q.maxRetries} retries used</span>
          <span class="when">${relative(q.at / 1000)}</span>`
       : `<span class="muted">No gantry leveling this session yet. Run one and the result shows up here.</span>`;
     const p = k.lastProbe;

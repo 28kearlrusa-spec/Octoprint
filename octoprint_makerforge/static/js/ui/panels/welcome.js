@@ -41,19 +41,20 @@ export function mountWelcome(host) {
     const f = store.get("printer.flags");
     const c = config.data;
     const steps = [
-      { done: !!(f.operational || f.printing || f.paused), title: "Connect your printer", text: "Pick the serial port. With Klipper it's usually /tmp/printer.", cta: "Connect", go: () => openConnect() },
-      { done: !!(webcamInfo().configured || webcamInfo().snapshot), title: "Add your camera", text: "So you can watch the first layer from the couch.", cta: "Camera settings", go: () => router.go("settings", ["camera"]) },
-      { done: (fileCount ?? 0) > 0, title: "Upload a G-code file", text: "Drop one anywhere on this page, or use Files.", cta: "Open Files", go: () => router.go("files") },
-      { done: c.fans.some((x) => x.type === "generic" && x.enabled) || c.leds.some((x) => x.enabled), title: "Tell it about your fans and LEDs", text: "Nevermore, exhaust, Stealthburner lights: add their Klipper names.", cta: "Fans and lights", go: () => router.go("settings", ["fans"]) },
+      { done: !!(f.operational || f.printing || f.paused), title: "Connect the printer", text: "For Klipper the port is usually /tmp/printer.", cta: "Connect", go: () => openConnect() },
+      { done: !!(webcamInfo().configured || webcamInfo().snapshot), title: "Add a camera", text: "Set its stream address to watch prints here.", cta: "Camera settings", go: () => router.go("settings", ["camera"]) },
+      { done: (fileCount ?? 0) > 0, title: "Upload G-code", text: "Drop a file on any page, or use Files.", cta: "Open Files", go: () => router.go("files") },
+      { done: c.fans.some((x) => x.type === "generic" && x.enabled) || c.leds.some((x) => x.enabled), title: "Add fans and lights", text: "Nevermore, exhaust and LED names from printer.cfg.", cta: "Fans and lights", go: () => router.go("settings", ["fans"]) },
     ];
     const left = steps.filter((s) => !s.done).length;
     el.hidden = left === 0 || fileCount === null;
     r.sub.textContent = `${steps.length - left} of ${steps.length} done`;
-    r.steps.replaceChildren(...steps.map((s) => {
-      const li = html`<li class="${s.done ? "is-done" : ""}"><span class="tick">${raw(icon(s.done ? "check" : "plus", "i i-sm"))}</span>
-        <div class="grow"><b>${s.title}</b><span class="muted">${s.text}</span></div>
-        ${s.done ? "" : html`<button class="btn btn-sm">${s.cta}</button>`}</li>`;
-      li.querySelector("button")?.addEventListener("click", s.go);
+    // only what's left to do; the count says how far along the setup is
+    r.steps.replaceChildren(...steps.filter((s) => !s.done).map((s) => {
+      const li = html`<li><span class="tick">${raw(icon("plus", "i i-sm"))}</span>
+        <div class="step-text"><b>${s.title}</b><span class="muted">${s.text}</span></div>
+        <button class="btn btn-sm">${s.cta}</button></li>`;
+      li.querySelector("button").addEventListener("click", s.go);
       return li;
     }));
   }

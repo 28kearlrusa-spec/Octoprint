@@ -37,7 +37,9 @@ export async function signIn(user, pass, remember) {
     return { ok: true, me };
   } catch (e) {
     if (e instanceof ApiError) {
-      if (e.status === 403 && e.body?.mfa) return { ok: false, mfa: true, message: "This account uses two-factor login. Sign in with the classic UI, then come back." };
+      // OctoPrint 1.11+: the password was right, and a second factor (e.g. an authenticator code) is due
+      if (e.status === 403 && e.body?.mfa) return { ok: false, mfa: true, message: "This account uses two-factor sign-in." };
+      if (e.status === 403 && e.body?.mfa_error) return { ok: false, message: "That two-factor code wasn't accepted." };
       if (e.status === 403) return { ok: false, message: "That username and password don't match." };
       if (e.status === 429) return { ok: false, message: "Too many attempts. Wait a minute, then try again." };
     }

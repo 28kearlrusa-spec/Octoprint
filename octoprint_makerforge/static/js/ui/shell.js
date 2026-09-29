@@ -44,7 +44,7 @@ export function mountShell(root) {
       </aside>
 
       <header class="topbar">
-        <a class="plaque" href="#/print" aria-label="MakerForge, home"><img src="${sb}/img/logo-plaque.jpg" alt="MakerForge" width="179" height="34"></a>
+        <a class="top-mark" href="#/print" aria-label="MakerForge, home"><img src="${sb}/img/icon-192.png" alt="" width="32" height="32"></a>
         <div class="top-status">
           <div class="top-name truncate" data-ref="name">Printer</div>
           <div class="top-state"><span class="dot"></span><span data-ref="state" class="truncate">Connecting…</span></div>
@@ -111,7 +111,7 @@ export function mountShell(root) {
 
     r.name.textContent = config.data.printerName || s.profile?.name || "Printer";
     // the label says it all for the calm states; errors and warnings add what to do about it
-    r.state.textContent = st.detail && (st.tone === "err" || st.tone === "warn") ? `${st.label} · ${st.detail}` : st.label;
+    r.state.textContent = st.detail && (st.tone === "err" || st.tone === "warn") ? `${st.label}: ${st.detail}` : st.label;
     r.state.title = st.detail || "";
 
     const frac = progressFrac(s);
@@ -155,10 +155,9 @@ export function mountShell(root) {
       r.nettext.textContent = sock === "polling" ? "Live updates are blocked here, so the page refreshes every couple of seconds." : "Lost the live connection to OctoPrint. Reconnecting…";
     }
 
-    // browser tab: "▶ 42% benchy · MakerForge"
+    // browser tab: "42% benchy – MakerForge", so progress shows from another tab
     if (prefs.get("tabTitle") && el.dataset.active === "1" && frac != null) {
-      const glyph = st.key === "paused" ? "⏸" : "▶";
-      document.title = `${glyph} ${Math.floor(frac * 100)}% ${r.jobname.textContent} · MakerForge`;
+      document.title = `${st.key === "paused" ? "Paused " : ""}${Math.floor(frac * 100)}% ${r.jobname.textContent} – MakerForge`;
     }
   }
   const offs = [

@@ -311,17 +311,17 @@ export default {
       const rows = [
         ["Estimated time", (info.estimatedSeconds ?? f.gcodeAnalysis?.estimatedPrintTime) ? duration(info.estimatedSeconds ?? f.gcodeAnalysis.estimatedPrintTime) : null],
         ["Slicer", info.slicer],
-        ["Material", [info.filamentType, info.filamentName].filter(Boolean).join(" · ") || null],
-        ["Filament", mm ? `${filamentLength(mm)} · ${grams(info.filamentGrams ?? filamentGrams(mm, fc.diameter, fc.density))}` : null],
+        ["Material", [info.filamentType, info.filamentName].filter(Boolean).join(", ") || null],
+        ["Filament", mm ? `${filamentLength(mm)} (${grams(info.filamentGrams ?? filamentGrams(mm, fc.diameter, fc.density))})` : null],
         ["Layer height", info.layerHeight ? `${info.layerHeight} mm` : null],
         ["Layers", info.layerCount ?? m?.layers?.count],
-        ["Nozzle", info.nozzleTemp ? `${Math.round(info.nozzleTemp)}° · ${info.nozzleDiameter || "0.4"} mm` : null],
+        ["Nozzle", info.nozzleTemp ? `${info.nozzleDiameter || "0.4"} mm at ${Math.round(info.nozzleTemp)}°` : null],
         ["Bed", info.bedTemp ? `${Math.round(info.bedTemp)}°` : null],
         ["Infill", info.infill],
         ["Size on screen", dim ? `${dim.width?.toFixed(1)} × ${dim.depth?.toFixed(1)} × ${dim.height?.toFixed(1)} mm` : null],
         ["File size", bytes(f.size)],
         ["Added", dateTime(f.date)],
-        ["Print history", printCount(f) ? `${f.prints.success || 0} finished, ${f.prints.failure || 0} failed${f.prints.last ? ` · last ${relative(f.prints.last.date)} (${duration(f.prints.last.printTime)})` : ""}` : "Never printed"],
+        ["Print history", printCount(f) ? `${f.prints.success || 0} finished, ${f.prints.failure || 0} failed${f.prints.last ? `, last ${relative(f.prints.last.date)} (${duration(f.prints.last.printTime)})` : ""}` : "Never printed"],
       ].filter(([, v]) => v != null && v !== "");
       const body = html`
         <div class="detail">

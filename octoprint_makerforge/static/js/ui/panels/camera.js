@@ -22,7 +22,7 @@ export function mountCamera(host, { compact = false } = {}) {
       </div>
       <div class="cam-frame" data-ref="frame">
         <img data-ref="img" alt="Live view of the print bed" hidden>
-        <div class="cam-badge" data-ref="badge" hidden><span class="dot is-err is-pulse"></span>LIVE</div>
+        <div class="cam-badge" data-ref="badge" hidden><span class="dot is-err"></span>Live</div>
         <div class="cam-empty" data-ref="empty" hidden></div>
       </div>
     </section>`;
@@ -33,6 +33,7 @@ export function mountCamera(host, { compact = false } = {}) {
   let retry = null;
   let snapTimer = null;
   let attempts = 0;
+  let everSeen = false;
 
   function emptyState(kind) {
     r.img.hidden = true;
@@ -40,10 +41,15 @@ export function mountCamera(host, { compact = false } = {}) {
     r.empty.hidden = false;
     r.reload.disabled = r.snap.disabled = r.full.disabled = true;
     if (kind === "none") {
-      r.empty.innerHTML = `${icon("camera")}<b>No camera set up</b><span>Add your stream address to see the print live here.</span><button class="btn btn-sm" data-go>${icon("settings")}Camera settings</button>`;
+      r.empty.innerHTML = `${icon("camera")}<b>No camera set up</b><span>Add the stream address in Settings to watch prints here.</span><button class="btn btn-sm" data-go>${icon("settings")}Camera settings</button>`;
       r.empty.querySelector("[data-go]").addEventListener("click", () => router.go("settings", ["camera"]));
     } else if (kind === "lost") {
-      r.empty.innerHTML = `${icon("wifi-off")}<b>Lost the camera stream</b><span>Trying again${attempts > 1 ? ` (attempt ${attempts})` : ""}…</span>`;
+      // A camera that was never seen is "not responding"; one that dropped out is "lost"
+      r.empty.innerHTML = everSeen
+        ? `${icon("wifi-off")}<b>Camera stream stopped</b><span>Reconnecting automatically.</span>`
+        : `${icon("camera")}<b>Camera not responding</b><span>The camera service on the printer isn't answering. This page keeps checking.</span><button class="btn btn-sm" data-go>${icon("settings")}Camera settings</button>`;
+      r.empty.querySelector("[data-go]")?.addEventListener("click", () => router.go("settings", ["camera"]));
+      r.reload.disabled = false;
     } else if (kind === "unsupported") {
       r.empty.innerHTML = `${icon("video")}<b>This stream type can't play here</b><span>Open the stream in its own tab instead.</span><a class="btn btn-sm" target="_blank" rel="noopener" href="${info.stream}">${icon("external")}Open stream</a>`;
     }
@@ -69,20 +75,20 @@ export function mountCamera(host, { compact = false } = {}) {
     r.img.hidden = false;
 
     if (info.configured) {
-      r.img.onload = () => { attempts = 0; r.badge.hidden = false; r.empty.hidden = true; r.img.hidden = false; };
+      r.img.onload = () => { attempts = 0; everSeen = true; r.badge.hidden = false; r.empty.hidden = true; r.img.hidden = false; };
       r.img.onerror = () => {
         attempts++;
         emptyState("lost");
-        retry = setTimeout(start, Math.min(2000 * attempts, 15000));
+        retry = setTimeout(start, Math.min(2000 * attempts, 30000));
       };
       r.img.src = bust(info.stream);
     } else {
       // no stream, only snapshots: refresh every couple of seconds
       const refresh = () => { r.img.src = bust(info.snapshot); };
-      r.img.onload = () => { r.badge.hidden = false; };
+      r.img.onload = () => { everSeen = true; r.badge.hidden = false; };
       refresh();
       snapTimer = setInterval(refresh, 2500);
-      r.sub.textContent = "snapshots";
+      r.sub.textContent = "Snapshots";
     }
   }
 

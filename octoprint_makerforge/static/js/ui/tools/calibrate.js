@@ -144,7 +144,7 @@ export function shaperPanel(host) {
       const d = res[ax];
       if (!d.fits.length) continue;
       const best = d.pick?.type;
-      parts.push(`<h3 style="margin:var(--s-2) 0">${ax} axis</h3><table class="table shaper-table"><thead><tr><th>Shaper</th><th class="r">Frequency</th><th class="r">Vibrations</th><th class="r">Smoothing</th><th class="r">Max accel</th></tr></thead><tbody>${d.fits.map((f) => `<tr class="${f.type === best ? "best" : ""}"><td class="${f.type === best ? "best" : ""}">${f.type}${f.type === best ? " ✓" : ""}</td><td class="r">${f.freq.toFixed(1)} Hz</td><td class="r">${f.vibrations.toFixed(1)}%</td><td class="r">${f.smoothing.toFixed(3)}</td><td class="r">${d.accel[f.type] ? d.accel[f.type] : "–"}</td></tr>`).join("")}</tbody></table>`);
+      parts.push(`<h3 style="margin:var(--s-2) 0">${ax} axis</h3><table class="table shaper-table"><thead><tr><th>Shaper</th><th class="r">Frequency</th><th class="r">Vibrations</th><th class="r">Smoothing</th><th class="r">Max accel</th></tr></thead><tbody>${d.fits.map((f) => `<tr class="${f.type === best ? "best" : ""}"><td class="${f.type === best ? "best" : ""}">${f.type}${f.type === best ? " (recommended)" : ""}</td><td class="r">${f.freq.toFixed(1)} Hz</td><td class="r">${f.vibrations.toFixed(1)}%</td><td class="r">${f.smoothing.toFixed(3)}</td><td class="r">${d.accel[f.type] ? d.accel[f.type] : "–"}</td></tr>`).join("")}</tbody></table>`);
     }
     r.out.innerHTML = parts.join("") || "";
     r.actions.hidden = !(res.X.pick || res.Y.pick);
@@ -246,11 +246,11 @@ export function soakPanel(host) {
     let frac, status;
     if (job.hasSensor && chamber != null) {
       frac = Math.min(1, Math.max(0, (chamber - 22) / (job.ch - 22)));
-      status = `Chamber ${chamber.toFixed(1)}° of ${job.ch}° · bed ${bedNow != null ? bedNow.toFixed(0) : "–"}° of ${job.bed}°`;
+      status = `Chamber ${chamber.toFixed(1)}° of ${job.ch}°, bed ${bedNow != null ? bedNow.toFixed(0) : "–"}° of ${job.bed}°`;
       if (chamber >= job.ch) { finish(`Chamber reached ${job.ch}°`); return; }
     } else {
       frac = Math.min(1, (Date.now() - job.started) / (job.until - job.started));
-      status = `Soaking by time, no chamber sensor · bed ${bedNow != null ? bedNow.toFixed(0) : "–"}°`;
+      status = `Soaking by time (no chamber sensor), bed ${bedNow != null ? bedNow.toFixed(0) : "–"}°`;
     }
     if (left <= 0) { finish(job.hasSensor ? "Time limit reached before the chamber got there" : "Soak time is up"); return; }
     r.status.textContent = status;

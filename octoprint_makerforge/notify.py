@@ -17,16 +17,18 @@ except ImportError:  # pragma: no cover
     requests = None
 
 TIMEOUT = 8
+# event: (title, ntfy priority 1-5)
 EVENTS = {
-    "PrintStarted": ("Print started", "🟢", 3),
-    "PrintDone": ("Print finished", "✅", 3),
-    "PrintFailed": ("Print failed", "❌", 5),
-    "PrintCancelled": ("Print cancelled", "🛑", 3),
-    "PrintPaused": ("Print paused", "⏸️", 4),
-    "Error": ("Printer error", "🚨", 5),
+    "PrintStarted": ("Print started", 3),
+    "PrintDone": ("Print finished", 3),
+    "PrintFailed": ("Print failed", 5),
+    "PrintCancelled": ("Print cancelled", 3),
+    "PrintPaused": ("Print paused", 4),
+    "Error": ("Printer error", 5),
 }
-DISCORD_COLORS = {"PrintStarted": 0x66FF00, "PrintDone": 0x66FF00, "PrintFailed": 0xFF5D6C,
-                  "PrintCancelled": 0xF5B342, "PrintPaused": 0xF5B342, "Error": 0xFF5D6C}
+# the MakerForge palette: logo green for good news, red for failures, amber in between
+DISCORD_COLORS = {"PrintStarted": 0x86D929, "PrintDone": 0x86D929, "PrintFailed": 0xEF5F6B,
+                  "PrintCancelled": 0xE3B341, "PrintPaused": 0xE3B341, "Error": 0xEF5F6B}
 
 
 def clean_hook(raw):
@@ -43,7 +45,7 @@ def clean_hook(raw):
 
 
 def describe(event, payload, printer_name=""):
-    title, emoji, _prio = EVENTS.get(event, (event, "ℹ️", 3))
+    title, _prio = EVENTS.get(event, (event, 3))
     payload = payload or {}
     name = payload.get("name") or payload.get("path") or ""
     lines = []
@@ -55,9 +57,9 @@ def describe(event, payload, printer_name=""):
     if event in ("PrintFailed", "Error") and (payload.get("reason") or payload.get("error")):
         lines.append(str(payload.get("reason") or payload.get("error")))
     body = "\n".join(lines) or title
-    head = "%s %s" % (emoji, title)
+    head = title
     if printer_name:
-        head += " · " + printer_name
+        head += " on " + printer_name
     return head, body
 
 
@@ -66,11 +68,11 @@ def build_request(hook, event, payload, printer_name=""):
     head, body = describe(event, payload, printer_name)
     kind = hook["type"]
     if kind == "discord":
-        return hook["url"], {"json": {"embeds": [{"title": head, "description": body, "color": DISCORD_COLORS.get(event, 0x66FF00)}]}}
+        return hook["url"], {"json": {"embeds": [{"title": head, "description": body, "color": DISCORD_COLORS.get(event, 0x86D929)}]}}
     if kind == "slack":
         return hook["url"], {"json": {"text": "*%s*\n%s" % (head, body)}}
     if kind == "ntfy":
-        _t, _e, prio = EVENTS.get(event, ("", "", 3))
+        _t, prio = EVENTS.get(event, ("", 3))
         headers = {"Title": head.encode("utf-8"), "Priority": str(prio), "Tags": event.lower()}
         return hook["url"], {"data": body.encode("utf-8"), "headers": headers}
     return hook["url"], {"json": {"event": event, "title": head, "message": body, "printer": printer_name, "payload": payload or {}}}

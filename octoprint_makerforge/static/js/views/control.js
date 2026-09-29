@@ -269,7 +269,7 @@ function extruderPanel(host) {
     const f = store.get("printer.flags");
     const on = f.operational && can("control") && !isPrintingNow();
     lock.hidden = !isPrintingNow();
-    r.temp.textContent = t?.actual != null ? `${t.actual.toFixed(0)}°${t.target ? ` → ${Math.round(t.target)}°` : ""}` : "–";
+    r.temp.textContent = t?.actual != null ? `${t.actual.toFixed(0)}°${t.target ? ` of ${Math.round(t.target)}°` : ""}` : "–";
     r.temp.className = "chip" + (t?.actual >= 170 ? " is-ok" : "");
     const cold = t?.actual != null && t.actual < 170;
     r.cold.hidden = !(cold && on);
@@ -324,7 +324,7 @@ function macroPanel(host) {
 }
 
 // ~~ fans and lights ~~
-const COLORS = [["White", "#ffffff"], ["Warm", "#ffb46b"], ["Lime", "#66ff00"], ["Pink", "#ff33cc"], ["Red", "#ff2a2a"], ["Blue", "#2a6bff"], ["Off", "#000000"]];
+const COLORS = [["White", "#ffffff"], ["Warm", "#ffb46b"], ["Green", "#86d929"], ["Pink", "#e951b0"], ["Red", "#ff2a2a"], ["Blue", "#2a6bff"], ["Off", "#000000"]];
 
 function fansPanel(host) {
   const el = html`
@@ -367,7 +367,7 @@ function fansPanel(host) {
         b.addEventListener("click", () => set(hex));
         sw.append(b);
       }
-      const pick = html`<input class="color-input" type="color" value="#66ff00" aria-label="Custom colour for ${l.name}">`;
+      const pick = html`<input class="color-input" type="color" value="#86d929" aria-label="Custom colour for ${l.name}">`;
       pick.addEventListener("change", () => set(pick.value));
       sw.append(pick);
       return row;

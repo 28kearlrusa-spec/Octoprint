@@ -13,9 +13,11 @@ keeps working and can always be reached with ``/?classic``.
 """
 from __future__ import absolute_import
 
+import base64
 import hashlib
 import logging
 import os
+import re
 import time
 
 import flask
@@ -32,14 +34,57 @@ __plugin_name__ = "MakerForge UI"
 __plugin_pythoncompat__ = ">=3.7,<4"
 __plugin_version__ = __version__
 __plugin_description__ = (
-    "A complete custom control surface for OctoPrint and Klipper, built for Voron-class "
-    "printers and styled in the MakerForge look."
+    "A replacement interface for OctoPrint and Klipper, made for Voron printers and styled "
+    "after the MakerForge logo."
 )
 __plugin_author__ = "MakerForge"
 __plugin_url__ = "https://github.com/28kearlrusa-spec/Octoprint"
 __plugin_license__ = "AGPLv3"
 
 CLASSIC_COOKIE = "mf_ui"
+
+# Headers for every page of the app. The content security policy is the important one: the
+# page may only run scripts from this plugin, so injected markup can't run code.
+SECURITY_HEADERS = {
+    "Referrer-Policy": "same-origin",
+    "X-Content-Type-Options": "nosniff",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+}
+_INLINE_SCRIPT = re.compile(r"<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>", re.S | re.I)
+
+
+def content_security_policy(html, host):
+    """A strict policy for the app shell.
+
+    The page's two small inline scripts (the import map and a browser check) are allowed by
+    their hash rather than a nonce: OctoPrint caches this page, and a hash stays valid for a
+    cached copy. Camera streams may live on another port or host, so images are the one thing
+    allowed from anywhere.
+    """
+    hashes = []
+    for m in _INLINE_SCRIPT.finditer(html):
+        attrs = m.group("attrs").lower()
+        if "src=" in attrs or "application/json" in attrs:
+            continue   # external files are covered by 'self'; JSON data blocks never run
+        digest = hashlib.sha256(m.group("body").encode("utf-8")).digest()
+        hashes.append("'sha256-{}'".format(base64.b64encode(digest).decode("ascii")))
+    sockets = "ws://{0} wss://{0}".format(host) if host else ""
+    return "; ".join([
+        "default-src 'self'",
+        " ".join(["script-src 'self'"] + hashes),
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: http: https:",
+        "media-src 'self' blob:",
+        "font-src 'self'",
+        "connect-src 'self' {}".format(sockets).strip(),
+        "worker-src 'self' blob:",
+        "frame-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'self'",
+    ])
 
 
 class MakerForgePlugin(
@@ -166,13 +211,18 @@ class MakerForgePlugin(
             debug=bool(render_kwargs.get("debug")),
             classicUrl="{}/?classic".format(base),
         )
-        return flask.render_template(
+        html = flask.render_template(
             "makerforge_index.jinja2",
             boot=boot,
             import_map=self._import_map(boot["staticBase"]),
             version=__version__,
             asset_v=self._asset_version(),
         )
+        response = flask.make_response(html)
+        response.headers["Content-Security-Policy"] = content_security_policy(html, request.host)
+        for name, value in SECURITY_HEADERS.items():
+            response.headers[name] = value
+        return response
 
     # ~~ Import map: content hashed module URLs (cache busting without a bundler) -------
 
@@ -263,11 +313,11 @@ class MakerForgePlugin(
             "start_url": "{}/".format(base) if self._settings.get_boolean(["default_ui"]) else "{}/plugin/makerforge/".format(base),
             "scope": "{}/".format(base),
             "display": "standalone",
-            "background_color": "#0b0b0d",
-            "theme_color": "#0b0b0d",
+            "background_color": "#17181b",
+            "theme_color": "#17181b",
             "icons": [
-                {"src": static + "/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
-                {"src": static + "/img/icon-512.png", "sizes": "512x512", "type": "image/png"},
+                {"src": static + "/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": static + "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
             ],
         }
         response = flask.jsonify(data)
@@ -366,7 +416,12 @@ class MakerForgePlugin(
         except (ValueError, IOError, OSError) as exc:
             return self._file_error(exc)
         if not found:
-            return flask.make_response(flask.jsonify(error="No thumbnail in this file."), 404)
+            # A file without a thumbnail is normal, not an error: answer "nothing here" so the
+            # browser doesn't log a failed request for every such file in the list. It may be
+            # cached briefly, since the answer only changes when the file is replaced.
+            response = flask.make_response("", 204)
+            response.headers["Cache-Control"] = "private, max-age=300"
+            return response
         data, mime, etag = found
         response = flask.make_response(data)
         response.headers["Content-Type"] = mime

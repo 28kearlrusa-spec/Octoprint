@@ -22,7 +22,7 @@ export function mountQuickTune(host) {
   const st = load();
   const el = html`
     <section class="panel a-tune" aria-label="Live tuning">
-      <div class="panel-head"><h2 class="panel-title">Live tuning</h2><span class="panel-sub">applies immediately</span></div>
+      <div class="panel-head"><h2 class="panel-title">Live tuning</h2></div>
       <div class="tune-body" data-ref="body">
         <div class="slider-row"><span class="k">${raw(icon("gauge"))}Speed</span><span class="v" data-ref="speedV">100%</span>
           <input class="range" type="range" min="25" max="200" step="5" value="${st.speed ?? 100}" data-ref="speed" aria-label="Speed factor"></div>
@@ -32,7 +32,7 @@ export function mountQuickTune(host) {
           <input class="range" type="range" min="0" max="100" step="5" value="${st.fan ?? 0}" data-ref="fan" aria-label="Part cooling fan"></div>
         <div data-ref="extra" class="col gap-4"></div>
         <div class="zoff">
-          <div class="zoff-read"><span class="k row" style="gap:8px">${raw(icon("zoffset", "i i-sm"))}Z offset (baby steps)</span><span><b data-ref="zNet">0.000</b> mm</span></div>
+          <div class="zoff-read"><span class="k row" style="gap:8px">${raw(icon("zoffset", "i i-sm"))}Z offset</span><span><b data-ref="zNet">0.000</b> mm</span></div>
           <div class="zoff-btns" data-ref="zb">
             <button class="btn" data-d="-0.05" aria-label="Closer by 0.05 millimetres">−0.05</button>
             <button class="btn" data-d="-0.01" aria-label="Closer by 0.01 millimetres">−0.01</button>
@@ -40,7 +40,7 @@ export function mountQuickTune(host) {
             <button class="btn" data-d="0.05" aria-label="Further by 0.05 millimetres">+0.05</button>
           </div>
           <div class="row wrap" style="gap:var(--s-2)">
-            <span class="hint grow">Negative moves the nozzle closer to the bed.</span>
+            <span class="hint grow">Baby steps. Negative moves the nozzle closer to the bed.</span>
             <button class="btn btn-sm btn-ghost" data-ref="zsave" data-tip="Adds this adjustment to the probe z_offset, then SAVE_CONFIG writes it to printer.cfg">${raw(icon("save"))}Save to probe</button>
           </div>
         </div>

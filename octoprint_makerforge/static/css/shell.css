@@ -20,7 +20,7 @@
   flex-direction: column;
   align-items: stretch;
   padding: var(--s-3) 0 var(--s-3);
-  background: linear-gradient(90deg, var(--bg-0), var(--bg-1));
+  background: var(--bg-0);
   border-right: 1px solid var(--line-1);
 }
 /* the slot */
@@ -49,7 +49,6 @@
   width: 100%; height: 100%;
   object-fit: cover;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  filter: saturate(0.85);
 }
 .rail-nav { display: flex; flex-direction: column; gap: 2px; position: relative; padding-right: 9px; }
 .rail-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-right: 9px; }
@@ -66,21 +65,21 @@
   color: var(--tx-3);
   font-family: var(--font-display);
   font-size: var(--fs-2xs);
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  letter-spacing: 0;
   -webkit-tap-highlight-color: transparent;
   transition: color var(--dur-1), background-color var(--dur-1);
 }
 .rail-link .i { width: 22px; height: 22px; }
 .rail-link:hover { color: var(--tx-1); background: var(--bg-3); }
-.rail-link[aria-current="page"] { color: var(--accent); background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.07)); }
+.rail-link[aria-current="page"] { color: var(--tx-1); background: var(--bg-3); }
+.rail-link[aria-current="page"] .i { color: var(--accent); }
 .rail-link:focus-visible { outline-offset: -3px; }
 .rail-badge {
   position: absolute; top: 9px; right: 18px;
   min-width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--err);
-  box-shadow: 0 0 6px var(--err);
 }
 /* T-nut that slides to the active item */
 .tnut {
@@ -91,7 +90,6 @@
   height: 30px;
   background: var(--accent);
   clip-path: polygon(0 3px, 3px 0, 100% 0, 100% 100%, 3px 100%, 0 calc(100% - 3px));
-  box-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.8);
   transform: translateY(var(--y, 0px));
   transition: transform var(--dur-3) var(--ease-out), opacity var(--dur-2);
   opacity: var(--o, 0);
@@ -102,7 +100,7 @@
 /* status LED colours, driven by data-state on .shell */
 .shell[data-state="ready"] .rail-led { --ring: var(--ready); }
 .shell[data-state="heating"] .rail-led { --ring: var(--accent-2); animation: led-pulse 1.4s var(--ease-in-out) infinite; }
-.shell[data-state="printing"] .rail-led { --ring: conic-gradient(from var(--spin, 0deg), var(--accent), var(--accent-2), var(--accent)); animation: led-spin 3.2s linear infinite; }
+.shell[data-state="printing"] .rail-led { --ring: var(--accent); }
 .shell[data-state="finishing"] .rail-led,
 .shell[data-state="connecting"] .rail-led { --ring: var(--info); animation: led-pulse 1s var(--ease-in-out) infinite; }
 .shell[data-state="paused"] .rail-led,
@@ -112,8 +110,6 @@
 .shell[data-state="shutdown"] .rail-led,
 .shell[data-state="unreachable"] .rail-led { --ring: var(--err); animation: led-pulse 0.9s var(--ease-in-out) infinite; }
 
-@property --spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-@keyframes led-spin { to { --spin: 360deg; } }
 @keyframes led-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 /* ~~ top bar ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -128,29 +124,20 @@
   padding: 0 var(--gutter);
   padding-top: var(--safe-t);
   height: calc(var(--topbar-h) + var(--safe-t));
-  background: rgb(11 11 13 / 0.86);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--bg-1);
   border-bottom: 1px solid var(--line-1);
 }
-.plaque {
-  --cut: 7px;
-  flex: 0 0 auto;
-  display: block;
-  height: 36px;
-  border: 1px solid var(--line-3);
-  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
-  background: var(--bg-0);
-}
-.plaque > img { height: 34px; width: auto; max-width: none; }
+/* phones have no rail, so the mark sits in the top bar there */
+.top-mark { display: none; flex: 0 0 auto; }
+.top-mark > img { width: 32px; height: 32px; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
 .top-status { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
-.top-name { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); }
+.top-name { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-state { display: flex; align-items: center; gap: 7px; color: var(--tx-3); font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-state .dot { width: 7px; height: 7px; }
-.shell[data-tone="ok"] .top-state .dot { background: var(--ready); box-shadow: 0 0 8px var(--ready); }
-.shell[data-tone="busy"] .top-state .dot { background: var(--accent-2); box-shadow: 0 0 8px rgb(var(--accent-2-rgb) / 0.8); animation: pulse 1.4s var(--ease-in-out) infinite; }
-.shell[data-tone="warn"] .top-state .dot { background: var(--warn); box-shadow: 0 0 8px rgb(245 179 66 / 0.7); }
-.shell[data-tone="err"] .top-state .dot { background: var(--err); box-shadow: 0 0 8px rgb(255 93 108 / 0.8); animation: pulse 0.9s var(--ease-in-out) infinite; }
+.shell[data-tone="ok"] .top-state .dot { background: var(--ready); }
+.shell[data-tone="busy"] .top-state .dot { background: var(--accent-2); animation: pulse 1.4s var(--ease-in-out) infinite; }
+.shell[data-tone="warn"] .top-state .dot { background: var(--warn); }
+.shell[data-tone="err"] .top-state .dot { background: var(--err); animation: pulse 0.9s var(--ease-in-out) infinite; }
 .shell[data-tone="info"] .top-state .dot { background: var(--info); animation: pulse 1s var(--ease-in-out) infinite; }
 
 .top-job {
@@ -171,13 +158,12 @@
 .top-actions { margin-left: auto; display: flex; align-items: center; gap: var(--s-2); }
 .top-actions .btn-label { display: inline; }
 
-/* gantry line: print progress along the bottom edge, ticked like a linear rail */
+/* print progress along the bottom edge of the top bar, visible on every screen */
 .gantry {
   --p: 0%;
   position: absolute;
   left: 0; right: 0; bottom: -1px;
-  height: 3px;
-  background: repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 24px);
+  height: 2px;
   pointer-events: none;
 }
 .gantry > i {
@@ -185,7 +171,6 @@
   width: var(--p);
   background: var(--grad);
   transition: width var(--dur-3) var(--ease-out);
-  box-shadow: 0 0 14px rgb(var(--accent-rgb) / 0.5);
 }
 .shell:not([data-active="1"]) .gantry > i { opacity: 0; }
 
@@ -228,9 +213,7 @@
     grid-template-columns: repeat(5, 1fr);
     height: calc(var(--tabbar-h) + var(--safe-b));
     padding-bottom: var(--safe-b);
-    background: rgb(11 11 13 / 0.94);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--bg-0);
     border-top: 1px solid var(--line-2);
   }
   .tabbar .rail-link { height: var(--tabbar-h); }
@@ -238,15 +221,17 @@
   .tabbar .rail-link[aria-current="page"]::before {
     content: "";
     position: absolute; top: -1px; left: 26%; right: 26%;
-    height: 3px;
+    height: 2px;
     background: var(--accent);
-    box-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.8);
   }
+  .top-mark { display: block; }
+}
+@media (max-width: 420px) {
+  /* the command palette is for keyboards; on a small phone it lives in the More menu */
+  .top-actions [data-ref="palette"] { display: none; }
 }
 @media (max-width: 640px) {
   :root { --gutter: 14px; }
-  .plaque { height: 30px; }
-  .plaque > img { height: 28px; }
   .top-job { display: none !important; }
   .top-status .top-name { display: none; }
   .topbar { gap: var(--s-3); }
@@ -288,14 +273,14 @@
 .login-banner::after {
   content: "";
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgb(16 16 19 / 0) 40%, var(--bg-2) 100%);
+  background: linear-gradient(180deg, transparent 40%, var(--bg-2) 100%);
 }
 .login-body { padding: var(--s-5) var(--s-6) var(--s-6); display: flex; flex-direction: column; gap: var(--s-4); }
 .login-body h1 { font-size: var(--fs-xl); }
 .login-foot { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; color: var(--tx-3); font-size: var(--fs-xs); }
 .login-error {
   padding: var(--s-2) var(--s-3);
-  border: 1px solid rgb(255 93 108 / 0.4);
+  border: 1px solid rgb(var(--err-rgb) / 0.4);
   border-left-width: 3px;
   background: var(--err-soft);
   color: var(--err);
@@ -312,9 +297,10 @@
   display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;
   margin: calc(var(--gutter) * -1) calc(var(--gutter) * -1) var(--gutter);
   padding: 8px var(--gutter);
-  background: var(--warn-soft); border-bottom: 1px solid rgb(245 179 66 / 0.4); color: var(--warn); font-size: var(--fs-sm);
+  background: var(--warn-soft); border-bottom: 1px solid rgb(var(--warn-rgb) / 0.4); color: var(--warn); font-size: var(--fs-sm);
 }
 .netbar .grow { flex: 1 1 260px; }
 .netbar[hidden] { display: none; }
-.netbar.is-alert { background: var(--err-soft); border-bottom-color: rgb(255 93 108 / 0.5); color: var(--err); }
+.netbar.is-alert { background: var(--err-soft); border-bottom-color: rgb(var(--err-rgb) / 0.5); color: var(--err); }
 .netbar .netbar-ic { display: inline-flex; }
+.login-mfa { display: grid; gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 1px solid var(--line-2); background: var(--bg-3); color: var(--tx-2); font-size: var(--fs-sm); }

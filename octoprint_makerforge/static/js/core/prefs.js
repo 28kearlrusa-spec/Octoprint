@@ -57,10 +57,10 @@ export const prefs = {
 };
 
 export const THEMES = [
-  { id: "forge", name: "MakerForge", note: "Lime and pink, straight from the logo", swatch: ["#66ff00", "#ff33cc"] },
-  { id: "voron", name: "Voron red", note: "Black and red, like the printer", swatch: ["#ff3b3b", "#ff8a1f"] },
-  { id: "ice", name: "Ice", note: "Cool cyan with a violet edge", swatch: ["#33d6ff", "#9b7bff"] },
-  { id: "amber", name: "Amber", note: "Warm terminal glow", swatch: ["#ffb000", "#ff5f1f"] },
+  { id: "forge", name: "MakerForge", note: "Green and pink from the logo", swatch: ["#86d929", "#e951b0"] },
+  { id: "voron", name: "Voron", note: "Red and orange on graphite", swatch: ["#e4412f", "#f08a3a"] },
+  { id: "ice", name: "Ice", note: "Blue with violet", swatch: ["#52b8e6", "#9a86ea"] },
+  { id: "amber", name: "Amber", note: "Amber with orange", swatch: ["#e9a53a", "#ec6d3a"] },
 ];
 
 /** Push preferences onto <html>. Cheap to call repeatedly. */
@@ -71,7 +71,7 @@ export function apply() {
   root.dataset.density = p.density === "compact" ? "compact" : "comfortable";
   root.dataset.motion = p.motion === "reduced" ? "reduced" : "auto";
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = "#0b0b0d";
+  if (meta) meta.content = "#17181b";
 }
 
 apply();

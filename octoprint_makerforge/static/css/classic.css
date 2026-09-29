@@ -5,19 +5,20 @@
  * layout is touched, so other plugins' tabs keep working.
  */
 html.mf-skin {
-  --mf-bg: #0b0b0d; --mf-bg2: #101013; --mf-bg3: #16161a; --mf-bg4: #1d1d22;
-  --mf-line: #2a2a31; --mf-line2: #3a3a43;
-  --mf-tx: #f4f4f6; --mf-tx2: #b4b5bd; --mf-tx3: #8a8b94;
-  --mf-lime: #66ff00; --mf-lime-lo: #4fd400; --mf-pink: #ff33cc; --mf-red: #ff5d6c;
+  /* the same graphite and logo colours as the MakerForge UI (see tokens.css) */
+  --mf-bg: #17181b; --mf-bg2: #1d1f22; --mf-bg3: #232529; --mf-bg4: #2a2d31;
+  --mf-line: #2f3236; --mf-line2: #3b3f44;
+  --mf-tx: #eceef0; --mf-tx2: #b8bcc1; --mf-tx3: #8b9096;
+  --mf-lime: #86d929; --mf-lime-lo: #6fbd1b; --mf-pink: #e951b0; --mf-red: #ef5f6b;
   color-scheme: dark;
 }
 html.mf-skin body {
   background: var(--mf-bg);
   color: var(--mf-tx);
-  font-family: Inter, ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 html.mf-skin a { color: var(--mf-lime); }
-html.mf-skin a:hover { color: #8bff3d; }
+html.mf-skin a:hover { color: #9ae64a; }
 html.mf-skin h1, html.mf-skin h2, html.mf-skin h3, html.mf-skin h4 { color: var(--mf-tx); }
 html.mf-skin hr { border-color: var(--mf-line); }
 html.mf-skin .muted, html.mf-skin small, html.mf-skin .help-block, html.mf-skin .help-inline { color: var(--mf-tx3); }
@@ -53,7 +54,7 @@ html.mf-skin .nav-tabs > .active > a, html.mf-skin .nav-tabs > .active > a:hover
   background: var(--mf-bg2); color: var(--mf-lime); border-color: var(--mf-line); border-bottom-color: var(--mf-bg2);
 }
 html.mf-skin .nav-list > li > a, html.mf-skin .nav-list .nav-header { text-shadow: none; }
-html.mf-skin .nav-list > .active > a { background: var(--mf-lime); color: #051200; }
+html.mf-skin .nav-list > .active > a { background: var(--mf-lime); color: #0f1a04; }
 html.mf-skin .tab-content { background: transparent; }
 
 /* forms */
@@ -71,13 +72,13 @@ html.mf-skin label, html.mf-skin .control-label { color: var(--mf-tx2); }
 html.mf-skin .btn {
   background: var(--mf-bg4); background-image: none; color: var(--mf-tx); border-color: var(--mf-line2); text-shadow: none; box-shadow: none;
 }
-html.mf-skin .btn:hover, html.mf-skin .btn:focus { background: #26262c; color: var(--mf-tx); }
-html.mf-skin .btn.disabled, html.mf-skin .btn[disabled] { background: var(--mf-bg3); color: #5d5e67; opacity: 1; }
-html.mf-skin .btn-primary, html.mf-skin .btn-info { background: var(--mf-lime); border-color: var(--mf-lime); color: #051200; font-weight: 600; }
+html.mf-skin .btn:hover, html.mf-skin .btn:focus { background: #33363b; color: var(--mf-tx); }
+html.mf-skin .btn.disabled, html.mf-skin .btn[disabled] { background: var(--mf-bg3); color: #62676d; opacity: 1; }
+html.mf-skin .btn-primary, html.mf-skin .btn-info { background: var(--mf-lime); border-color: var(--mf-lime); color: #0f1a04; font-weight: 600; }
 html.mf-skin .btn-primary:hover, html.mf-skin .btn-primary:focus, html.mf-skin .btn-info:hover { background: #8bff3d; color: #051200; }
 html.mf-skin .btn-primary.disabled, html.mf-skin .btn-primary[disabled] { background: #244a10; border-color: #244a10; color: #6a8d58; }
-html.mf-skin .btn-danger { background: transparent; color: var(--mf-red); border-color: rgb(255 93 108 / 0.55); }
-html.mf-skin .btn-danger:hover { background: var(--mf-red); color: #1a0407; }
+html.mf-skin .btn-danger { background: transparent; color: var(--mf-red); border-color: rgb(239 95 107 / 0.55); }
+html.mf-skin .btn-danger:hover { background: var(--mf-red); color: #1c0507; }
 html.mf-skin .btn-group > .btn.active, html.mf-skin .btn.active { background: #26262c; color: var(--mf-lime); box-shadow: inset 0 -2px 0 var(--mf-lime); }
 
 /* tables, alerts, progress */
@@ -89,16 +90,16 @@ html.mf-skin .progress { background: var(--mf-bg); background-image: none; box-s
 html.mf-skin .progress .bar, html.mf-skin .progress-info .bar {
   background: linear-gradient(90deg, var(--mf-lime), var(--mf-pink)); background-image: linear-gradient(90deg, var(--mf-lime), var(--mf-pink)); box-shadow: none;
 }
-html.mf-skin .alert { background: #2b230f; color: #f5b342; border-color: rgb(245 179 66 / 0.4); text-shadow: none; }
-html.mf-skin .alert-error, html.mf-skin .alert-danger { background: #2b1417; color: var(--mf-red); border-color: rgb(255 93 108 / 0.4); }
-html.mf-skin .alert-success { background: #10231a; color: #4ade80; border-color: rgb(74 222 128 / 0.35); }
-html.mf-skin .alert-info { background: #0f2230; color: #5cc8ff; border-color: rgb(92 200 255 / 0.35); }
+html.mf-skin .alert { background: #2b2513; color: #e3b341; border-color: rgb(227 179 65 / 0.4); text-shadow: none; }
+html.mf-skin .alert-error, html.mf-skin .alert-danger { background: #2d1719; color: var(--mf-red); border-color: rgb(239 95 107 / 0.4); }
+html.mf-skin .alert-success { background: #17271b; color: #67c77a; border-color: rgb(103 199 122 / 0.35); }
+html.mf-skin .alert-info { background: #14222e; color: #62aee8; border-color: rgb(98 174 232 / 0.35); }
 html.mf-skin .label, html.mf-skin .badge { text-shadow: none; }
 
 /* OctoPrint specifics */
 html.mf-skin #temperature-graph { background-color: var(--mf-bg2); }
 html.mf-skin #temperature-graph .legend, html.mf-skin #temperature-graph .tickLabel { color: var(--mf-tx3) !important; }
-html.mf-skin #terminal-output { background: #070708; color: var(--mf-tx2); border-color: var(--mf-line); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+html.mf-skin #terminal-output { background: #121315; color: var(--mf-tx2); border-color: var(--mf-line); font-family: ui-monospace, "SF Mono", Menlo, ui-monospace, Menlo, Consolas, monospace; }
 html.mf-skin #terminal-sendpanel input, html.mf-skin #terminal-sendpanel .btn { border-color: var(--mf-line2); }
 html.mf-skin #files .entry, html.mf-skin .gcode_files .entry { border-bottom-color: var(--mf-line); }
 html.mf-skin #files .entry:hover, html.mf-skin .gcode_files .entry:hover { background: var(--mf-bg3); }

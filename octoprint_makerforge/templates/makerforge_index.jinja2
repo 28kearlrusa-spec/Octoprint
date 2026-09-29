@@ -6,7 +6,7 @@
   <title>MakerForge</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0b0b0d">
+  <meta name="theme-color" content="#17181b">
   <meta name="robots" content="noindex, nofollow">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,11 +15,11 @@
   {%- set sb = boot.staticBase %}
   <link rel="manifest" href="{{ boot.pluginBase }}/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ sb }}/img/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="64x64" href="{{ sb }}/img/favicon-64.png">
-  <link rel="apple-touch-icon" href="{{ sb }}/img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ sb }}/img/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="{{ sb }}/img/favicon-96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ sb }}/img/apple-touch-icon.png">
 
-  <link rel="preload" href="{{ sb }}/fonts/SpaceGrotesk-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ sb }}/fonts/Inter-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ sb }}/fonts/IBMPlexSans-var.woff2" as="font" type="font/woff2" crossorigin>
 
   <link rel="stylesheet" href="{{ sb }}/css/tokens.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ sb }}/css/base.css?v={{ asset_v }}">
@@ -32,7 +32,7 @@
 </head>
 <body>
   <div id="boot" class="boot" role="status" aria-live="polite">
-    <img class="boot-mark" src="{{ sb }}/img/icon-192.png" alt="" width="72" height="72">
+    <img class="boot-mark" src="{{ sb }}/img/icon-192.png" alt="" width="64" height="64">
     <p class="boot-text">Starting MakerForge&hellip;</p>
     <p class="boot-fail" hidden>
       This browser is too old for the MakerForge UI.

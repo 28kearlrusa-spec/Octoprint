@@ -30,6 +30,10 @@ export function showLogin(root, { message = "" } = {}) {
             </div>
             <label class="check"><input type="checkbox" data-ref="remember" checked> Keep me signed in on this device</label>
             <button class="btn btn-primary btn-lg btn-block" type="submit" data-ref="go">Sign in</button>
+            <div class="login-mfa" data-ref="mfa" hidden>
+              <p>This account uses two-factor sign-in. Enter your code on OctoPrint's own sign-in page, and it brings you straight back here.</p>
+              <a class="btn btn-block" data-ref="mfago">${raw(icon("lock"))}Continue to code entry</a>
+            </div>
             <div class="login-foot">
               <a class="link" href="${boot.classicUrl}">Use the classic OctoPrint UI</a>
               <span>MakerForge ${boot.version}</span>
@@ -63,6 +67,15 @@ export function showLogin(root, { message = "" } = {}) {
       const res = await signIn(user, pass, r.remember.checked);
       r.go.classList.remove("is-busy");
       if (res.ok) { resolve(res); return; }
+      if (res.mfa) {
+        // OctoPrint's login page knows every installed two-factor method; hand over to it
+        const home = `${boot.base || ""}/`;
+        r.mfago.href = `${boot.base || ""}/login/?redirect=${encodeURIComponent(home)}`;
+        r.mfa.hidden = false;
+        r.go.hidden = true;
+        r.mfago.focus();
+        return;
+      }
       r.err.textContent = res.message;
       r.err.hidden = false;
       r.pass.select();

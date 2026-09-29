@@ -101,7 +101,7 @@ export default {
         const h = heater(n, s);
         const label = n === "tool0" ? "Nozzle" : n === "bed" ? "Bed" : "Chamber";
         const col = n === "tool0" ? "--heat-nozzle" : n === "bed" ? "--heat-bed" : "--heat-chamber";
-        return `<div class="k-temp" style="--hc:var(${col})"><div class="l">${label}</div><div class="n">${h.actual != null ? h.actual.toFixed(0) + "°" : "–"}</div><div class="t">${h.target > 0 ? "→ " + Math.round(h.target) + "°" : "off"}</div></div>`;
+        return `<div class="k-temp" style="--hc:var(${col})"><div class="l">${label}</div><div class="n">${h.actual != null ? h.actual.toFixed(0) + "°" : "–"}</div><div class="t">${h.target > 0 ? "Target " + Math.round(h.target) + "°" : "Off"}</div></div>`;
       }).join("");
     }
     const offs = ["printer", "temps", "progress", "job", "jobinfo", "config", "net", "klipper"].map((k) => store.on(k, render));

@@ -1,4 +1,4 @@
-// MakerForge UI · entry point
+// MakerForge UI: entry point
 import { store, bus } from "mf/core/store.js";
 import { boot, octo } from "mf/core/api.js";
 import * as auth from "mf/core/auth.js";

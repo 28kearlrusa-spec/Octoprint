@@ -374,6 +374,6 @@ const BUILDERS = {
     const keys = html`<div class="col gap-2"><h3>Shortcuts</h3><div class="row wrap gap-4"><span><kbd>Ctrl</kbd> <kbd>K</kbd> command palette</span><span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move X and Y (Control)</span><span><kbd>PgUp</kbd><kbd>PgDn</kbd> move Z (Control)</span></div></div>`;
     const links = html`<div class="row wrap"><a class="btn" href="${boot.classicUrl}">${raw(icon("external"))}Classic OctoPrint UI</a><a class="btn btn-ghost" target="_blank" rel="noopener" href="https://github.com/28kearlrusa-spec/Octoprint">${raw(icon("external"))}Project on GitHub</a></div>`;
     section(host, "About", "", kv, keys, links,
-      html`<div class="hint">Fonts: Space Grotesk, Inter and JetBrains Mono, all under the SIL Open Font License. Built for a Voron; made in the MakerForge shop.</div>`);
+      html`<div class="hint">Fonts: IBM Plex Sans and IBM Plex Mono, under the SIL Open Font License 1.1.</div>`);
   },
 };

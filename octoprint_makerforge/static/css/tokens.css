@@ -1,90 +1,120 @@
 /* MakerForge UI · design tokens
  *
- * Brand values (lime #66ff00, pink #ff33cc, near-black #0b0b0d, Space Grotesk + Inter) come
- * straight from the MakerForge site. Voron influence: cut corners, machined dark surfaces,
- * 2020-extrusion slots, and a status LED. Every colour used elsewhere is a token from here.
+ * Colour comes from the MakerForge logo itself: its letters run from green (#86d929) at the
+ * top to pink (#e951b0) at the bottom. Surfaces are a neutral graphite, like the brick wall
+ * behind the lettering, dark enough for a workshop at night. Corners are chamfered the way
+ * Voron parts are. Every colour used elsewhere is a token from here.
  */
 
 @font-face {
-  font-family: "Space Grotesk";
-  src: url("../fonts/SpaceGrotesk-var.woff2") format("woff2");
-  font-weight: 300 700;
+  font-family: "IBM Plex Sans";
+  src: url("../fonts/IBMPlexSans-var.woff2") format("woff2");
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Inter";
-  src: url("../fonts/Inter-var.woff2") format("woff2");
-  font-weight: 100 900;
+  font-family: "IBM Plex Sans";
+  src: url("../fonts/IBMPlexSans-var-ext.woff2") format("woff2");
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: "JetBrains Mono";
-  src: url("../fonts/JetBrainsMono-var.woff2") format("woff2");
-  font-weight: 100 800;
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-400.woff2") format("woff2");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-400-ext.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-500.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-500-ext.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 :root {
-  /* ~~ surfaces: a machined stack, each step a little lighter ~~~~~~~~~~~~~~~~~~~~~~~~ */
-  --bg-0: #060607;
-  --bg-1: #0b0b0d;
-  --bg-2: #101013;
-  --bg-3: #16161a;
-  --bg-4: #1d1d22;
-  --bg-5: #26262c;
+  /* ~~ surfaces: graphite, each step a little lighter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --bg-0: #121315;   /* behind camera images and the terminal log */
+  --bg-1: #17181b;   /* the page */
+  --bg-2: #1d1f22;   /* panels */
+  --bg-3: #232529;   /* insets, row hover */
+  --bg-4: #2a2d31;   /* controls */
+  --bg-5: #33363b;   /* controls on hover */
 
-  --line-1: #1f1f24;
-  --line-2: #2a2a31;
-  --line-3: #3a3a43;
-  --line-4: #55555f;
+  --line-1: #26282c;
+  --line-2: #2f3236;
+  --line-3: #3b3f44;
+  --line-4: #51565c;
 
-  --tx-1: #f4f4f6;
-  --tx-2: #b4b5bd;
-  --tx-3: #8a8b94;
-  --tx-4: #5d5e67;
+  --tx-1: #eceef0;
+  --tx-2: #b8bcc1;
+  --tx-3: #8b9096;
+  --tx-4: #62676d;
 
-  /* ~~ brand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-  --brand-lime: #66ff00;
-  --brand-pink: #ff33cc;
+  /* ~~ brand: the two ends of the logo's letter gradient ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --brand-green: #86d929;
+  --brand-pink: #e951b0;
 
   /* theme slots: overwritten by [data-theme] below */
-  --accent: #66ff00;
-  --accent-hi: #8bff3d;
-  --accent-lo: #4fd400;
-  --accent-soft: #16330a;
-  --accent-ink: #051200;
-  --accent-2: #ff33cc;
-  --accent-2-soft: #33102b;
-  --accent-rgb: 102 255 0;
-  --accent-2-rgb: 255 51 204;
+  --accent: #86d929;
+  --accent-hi: #9ae64a;
+  --accent-lo: #6fbd1b;
+  --accent-soft: #1f2b14;
+  --accent-ink: #0f1a04;
+  --accent-2: #e951b0;
+  --accent-2-soft: #321a2b;
+  --accent-rgb: 134 217 41;
+  --accent-2-rgb: 233 81 176;
   /* the colour of a healthy, idle machine: the accent, unless the accent is red */
   --ready: var(--accent);
   --grad: linear-gradient(90deg, var(--accent), var(--accent-2));
-  --grad-v: linear-gradient(180deg, var(--accent), var(--accent-2));
 
   /* ~~ semantic ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-  --ok: #4ade80;
-  --ok-soft: #10231a;
-  --warn: #f5b342;
-  --warn-soft: #2b230f;
-  --err: #ff5d6c;
-  --err-soft: #2b1417;
-  --info: #5cc8ff;
-  --info-soft: #0f2230;
+  --ok: #67c77a;
+  --ok-soft: #17271b;
+  --warn: #e3b341;
+  --warn-soft: #2b2513;
+  --warn-rgb: 227 179 65;
+  --err: #ef5f6b;
+  --err-soft: #2d1719;
+  --err-rgb: 239 95 107;
+  --info: #62aee8;
+  --info-soft: #14222e;
+  --info-rgb: 98 174 232;
 
   /* heaters keep their identity in every theme so a glance is enough */
-  --heat-nozzle: #ff4fd0;
-  --heat-bed: #ffb020;
-  --heat-chamber: #38d5ff;
-  --heat-aux: #a78bfa;
+  --heat-nozzle: #e951b0;
+  --heat-bed: #ee8a3a;
+  --heat-chamber: #58a9e0;
+  --heat-aux: #a58cf0;
 
   /* ~~ type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --fs-2xs: 0.6875rem;  /* 11 */
   --fs-xs: 0.75rem;     /* 12 */
@@ -92,9 +122,9 @@
   --fs-md: 0.875rem;    /* 14 */
   --fs-lg: 1rem;        /* 16 */
   --fs-xl: 1.25rem;     /* 20 */
-  --fs-2xl: 1.75rem;    /* 28 */
-  --fs-3xl: 2.5rem;     /* 40 */
-  --fs-4xl: 4rem;       /* 64 */
+  --fs-2xl: 1.625rem;   /* 26 */
+  --fs-3xl: 2.25rem;    /* 36 */
+  --fs-4xl: 3.5rem;     /* 56 */
 
   /* ~~ space (4px base) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
   --s-1: 4px;
@@ -107,20 +137,20 @@
   --s-8: 40px;
   --s-9: 56px;
 
-  /* ~~ shape: almost no radius, cut corners instead ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  /* ~~ shape: a small Voron chamfer on two corners, almost no radius elsewhere ~~~~~~~ */
   --r-1: 2px;
   --r-2: 4px;
-  --cut-s: 5px;
-  --cut-m: 10px;
-  --cut-l: 16px;
+  --cut-s: 4px;
+  --cut-m: 8px;
+  --cut-l: 12px;
 
   /* ~~ motion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-1: 120ms;
-  --dur-2: 220ms;
-  --dur-3: 420ms;
+  --dur-2: 200ms;
+  --dur-3: 360ms;
 
   /* ~~ layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
   --rail-w: 76px;
@@ -147,50 +177,50 @@
 /* ~~ themes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 :root[data-theme="forge"] {
-  /* the defaults above: lime + pink, straight from the MakerForge logo */
+  /* the defaults above: green and pink from the MakerForge logo */
 }
 
 :root[data-theme="voron"] {
-  --accent: #ff3b3b;
-  --accent-hi: #ff6b6b;
-  --accent-lo: #d92626;
-  --accent-soft: #331010;
+  /* Voron's own colours: black parts, red accents */
+  --accent: #e4412f;
+  --accent-hi: #f05a48;
+  --accent-lo: #c33322;
+  --accent-soft: #2e1714;
   --accent-ink: #ffffff;
-  --accent-2: #ff8a1f;
-  --accent-2-soft: #33200c;
-  --accent-rgb: 255 59 59;
-  --accent-2-rgb: 255 138 31;
-  --ready: #4ade80;
-  --heat-nozzle: #ff6a3d;
+  --accent-2: #f08a3a;
+  --accent-2-soft: #2e2014;
+  --accent-rgb: 228 65 47;
+  --accent-2-rgb: 240 138 58;
+  --ready: var(--ok);
 }
 
 :root[data-theme="ice"] {
-  --accent: #33d6ff;
-  --accent-hi: #7ae4ff;
-  --accent-lo: #16b5e0;
-  --accent-soft: #0b2530;
-  --accent-ink: #001219;
-  --accent-2: #9b7bff;
-  --accent-2-soft: #1d1738;
-  --accent-rgb: 51 214 255;
-  --accent-2-rgb: 155 123 255;
-  --heat-nozzle: #ff6fb5;
-  --heat-chamber: #7ae4ff;
+  --accent: #52b8e6;
+  --accent-hi: #74c8ee;
+  --accent-lo: #3a9fcd;
+  --accent-soft: #14242e;
+  --accent-ink: #04141c;
+  --accent-2: #9a86ea;
+  --accent-2-soft: #211c33;
+  --accent-rgb: 82 184 230;
+  --accent-2-rgb: 154 134 234;
+  --heat-nozzle: #ec6aa9;
+  --heat-chamber: #7bc8ea;
 }
 
 :root[data-theme="amber"] {
-  --accent: #ffb000;
-  --accent-hi: #ffc640;
-  --accent-lo: #e09b00;
-  --accent-soft: #33260a;
-  --accent-ink: #1a1000;
-  --accent-2: #ff5f1f;
-  --accent-2-soft: #33150a;
-  --accent-rgb: 255 176 0;
-  --accent-2-rgb: 255 95 31;
-  --ready: #4ade80;
-  --heat-nozzle: #ff5f1f;
-  --heat-bed: #ffd23f;
+  --accent: #e9a53a;
+  --accent-hi: #f1b85a;
+  --accent-lo: #cc8c24;
+  --accent-soft: #2d2413;
+  --accent-ink: #1a1102;
+  --accent-2: #ec6d3a;
+  --accent-2-soft: #2e1b13;
+  --accent-rgb: 233 165 58;
+  --accent-2-rgb: 236 109 58;
+  --ready: var(--ok);
+  --heat-nozzle: #ec6d3a;
+  --heat-bed: #e9c24a;
 }
 
 /* density: compact tightens gutters and control heights for big monitors */

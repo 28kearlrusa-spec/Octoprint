@@ -1,8 +1,8 @@
 /* MakerForge UI · component library
  *
- * The signature shape is the cut corner (top-left + bottom-right), a nod to Voron's angular
- * printed parts. clip-path cannot draw a border, so each cut is stroked with a 1px gradient
- * on the diagonal, and the straight edges use a normal border.
+ * Panels and buttons carry a small chamfer on the top-left and bottom-right corners, like
+ * Voron printed parts. clip-path cannot draw a border, so each chamfer is stroked with a 1px
+ * gradient on the diagonal and the straight edges use a normal border.
  */
 
 /* ~~ cut-corner surface ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -99,7 +99,7 @@
   color: var(--ink);
   font-family: var(--font-display);
   font-size: var(--fs-md);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   white-space: nowrap;
   user-select: none;
@@ -128,6 +128,7 @@
   --fill: var(--accent);
   --edge: var(--accent);
   --ink: var(--accent-ink);
+  font-weight: 600;
 }
 .btn-primary:hover:not(:disabled) { --fill: var(--accent-hi); --edge: var(--accent-hi); }
 .btn-primary:active:not(:disabled) { --fill: var(--accent-lo); --edge: var(--accent-lo); }
@@ -144,18 +145,18 @@
 
 .btn-danger {
   --fill: var(--err-soft);
-  --edge: rgb(255 93 108 / 0.55);
+  --edge: rgb(var(--err-rgb) / 0.55);
   --ink: var(--err);
 }
-.btn-danger:hover:not(:disabled) { --fill: var(--err); --edge: var(--err); --ink: #1a0407; }
-.btn-danger:active:not(:disabled) { --fill: #e04756; --edge: #e04756; --ink: #1a0407; }
+.btn-danger:hover:not(:disabled) { --fill: var(--err); --edge: var(--err); --ink: #1c0507; }
+.btn-danger:active:not(:disabled) { --fill: #d9505b; --edge: #d9505b; --ink: #1c0507; }
 
 .btn-warn {
   --fill: var(--warn-soft);
-  --edge: rgb(245 179 66 / 0.5);
+  --edge: rgb(var(--warn-rgb) / 0.5);
   --ink: var(--warn);
 }
-.btn-warn:hover:not(:disabled) { --fill: var(--warn); --edge: var(--warn); --ink: #1c1200; }
+.btn-warn:hover:not(:disabled) { --fill: var(--warn); --edge: var(--warn); --ink: #1c1402; }
 
 /* the second brand colour, and an informational tone (used by printer prompts) */
 .btn-alt {
@@ -166,10 +167,10 @@
 .btn-alt:hover:not(:disabled) { --fill: var(--accent-2); --edge: var(--accent-2); --ink: #16020f; }
 .btn-info {
   --fill: var(--info-soft);
-  --edge: rgb(92 200 255 / 0.5);
+  --edge: rgb(var(--info-rgb) / 0.5);
   --ink: var(--info);
 }
-.btn-info:hover:not(:disabled) { --fill: var(--info); --edge: var(--info); --ink: #03131c; }
+.btn-info:hover:not(:disabled) { --fill: var(--info); --edge: var(--info); --ink: #04121c; }
 
 .btn-sm { min-height: 30px; padding: 0 var(--s-3); font-size: var(--fs-sm); --cut: 4px; }
 .btn-lg { min-height: 46px; padding: 0 var(--s-6); font-size: var(--fs-lg); --cut: 8px; }
@@ -191,7 +192,7 @@
   inset: 0;
   transform: scaleX(0);
   transform-origin: left;
-  background: rgb(255 93 108 / 0.45);
+  background: rgb(var(--err-rgb) / 0.45);
   transition: transform 0.15s linear;
   pointer-events: none;
 }
@@ -217,14 +218,14 @@
   color: var(--tx-3);
   font-family: var(--font-display);
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   transition: background-color var(--dur-1), color var(--dur-1);
 }
 .seg > button:hover { color: var(--tx-1); background: var(--bg-3); }
 .seg > button[aria-pressed="true"], .seg > button.is-on {
   background: var(--bg-5);
-  color: var(--accent);
+  color: var(--tx-1);
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 .seg > button:focus-visible { outline-offset: -2px; }
@@ -244,7 +245,7 @@
   background: transparent;
   color: var(--tx-3);
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 .tabs > button:hover { color: var(--tx-1); }
@@ -274,13 +275,32 @@
 }
 .chip > svg { width: 13px; height: 13px; }
 .chip.is-accent { color: var(--accent); border-color: rgb(var(--accent-rgb) / 0.4); background: var(--accent-soft); }
-.chip.is-ok { color: var(--ok); border-color: rgb(74 222 128 / 0.35); background: var(--ok-soft); }
-.chip.is-warn { color: var(--warn); border-color: rgb(245 179 66 / 0.4); background: var(--warn-soft); }
-.chip.is-err { color: var(--err); border-color: rgb(255 93 108 / 0.4); background: var(--err-soft); }
-.chip.is-info { color: var(--info); border-color: rgb(92 200 255 / 0.35); background: var(--info-soft); }
+.chip.is-ok { color: var(--ok); border-color: rgb(103 199 122 / 0.35); background: var(--ok-soft); }
+.chip.is-warn { color: var(--warn); border-color: rgb(var(--warn-rgb) / 0.4); background: var(--warn-soft); }
+.chip.is-err { color: var(--err); border-color: rgb(var(--err-rgb) / 0.4); background: var(--err-soft); }
+.chip.is-info { color: var(--info); border-color: rgb(var(--info-rgb) / 0.35); background: var(--info-soft); }
 button.chip { cursor: pointer; }
 button.chip:hover { border-color: var(--line-4); color: var(--tx-1); }
 button.chip[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+/* series toggle: coloured dot and a name, dimmed while the series is hidden */
+.series-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-2);
+  background: transparent;
+  color: var(--tx-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.series-toggle > i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--tx-3)); flex: 0 0 auto; }
+.series-toggle:hover { background: var(--bg-3); color: var(--tx-1); }
+.series-toggle[aria-pressed="false"] { color: var(--tx-4); }
+.series-toggle[aria-pressed="false"] > i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c, var(--tx-4)); }
 
 /* status dot / LED */
 .dot {
@@ -289,10 +309,10 @@ button.chip[aria-pressed="true"] { color: var(--accent); border-color: var(--acc
   background: var(--tx-4);
   flex: 0 0 auto;
 }
-.dot.is-on { background: var(--accent); box-shadow: 0 0 8px rgb(var(--accent-rgb) / 0.8); }
-.dot.is-ok { background: var(--ok); box-shadow: 0 0 8px rgb(74 222 128 / 0.7); }
-.dot.is-warn { background: var(--warn); box-shadow: 0 0 8px rgb(245 179 66 / 0.7); }
-.dot.is-err { background: var(--err); box-shadow: 0 0 8px rgb(255 93 108 / 0.8); }
+.dot.is-on { background: var(--accent); }
+.dot.is-ok { background: var(--ok); }
+.dot.is-warn { background: var(--warn); }
+.dot.is-err { background: var(--err); }
 .dot.is-pulse { animation: pulse 1.6s var(--ease-in-out) infinite; }
 
 /* ~~ form controls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -356,7 +376,7 @@ button.chip[aria-pressed="true"] { color: var(--accent); border-color: var(--acc
   background: transparent;
   color: var(--tx-1);
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   outline: none;
   -moz-appearance: textfield;
@@ -639,7 +659,7 @@ button.chip[aria-pressed="true"] { color: var(--accent); border-color: var(--acc
 .toast > svg { width: 18px; height: 18px; margin-top: 1px; flex: 0 0 auto; }
 .toast.is-ok > svg { color: var(--ok); }
 .toast.is-warn > svg { color: var(--warn); }
-.toast.is-err { --edge: rgb(255 93 108 / 0.6); }
+.toast.is-err { --edge: rgb(var(--err-rgb) / 0.6); }
 .toast.is-err > svg { color: var(--err); }
 .toast.is-info > svg { color: var(--info); }
 .toast-title { font-weight: 600; font-family: var(--font-display); }
@@ -650,13 +670,13 @@ button.chip[aria-pressed="true"] { color: var(--accent); border-color: var(--acc
 .empty {
   display: grid;
   justify-items: center;
-  gap: var(--s-3);
-  padding: var(--s-8) var(--s-4);
+  gap: var(--s-2);
+  padding: var(--s-7) var(--s-4);
   text-align: center;
   color: var(--tx-3);
 }
-.empty > svg { width: 40px; height: 40px; color: var(--tx-4); }
-.empty-title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-lg); color: var(--tx-2); }
+.empty > svg { width: 28px; height: 28px; color: var(--tx-4); }
+.empty-title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); color: var(--tx-2); }
 .empty-text { max-width: 44ch; }
 
 .skeleton {

@@ -84,7 +84,7 @@ export default {
       r.state.className = "chip " + (mode === "off" ? "" : "is-accent");
 
       const un = data.unrendered || [];
-      r.unrendered.innerHTML = un.length ? `<table class="table"><tbody>${un.map((u) => `<tr><td>${esc(u.name)}<div class="muted" style="font-size:var(--fs-xs)">${bytes(u.bytes ?? 0)} · ${relative(u.date)}${u.recording ? " · recording now" : u.rendering ? " · rendering" : ""}</div></td><td class="r nowrap">
+      r.unrendered.innerHTML = un.length ? `<table class="table"><tbody>${un.map((u) => `<tr><td>${esc(u.name)}<div class="muted" style="font-size:var(--fs-xs)">${bytes(u.bytes ?? 0)}, ${relative(u.date)}${u.recording ? ", recording now" : u.rendering ? ", rendering" : ""}</div></td><td class="r nowrap">
         <button class="btn btn-sm" data-render="${esc(u.name)}" ${u.recording || u.rendering || !can("timelapse_manage_unrendered") ? "disabled" : ""}>${icon("film", "i i-sm")}Render</button>
         <button class="btn btn-sm btn-ghost btn-icon" data-delu="${esc(u.name)}" aria-label="Delete ${esc(u.name)}" ${u.recording ? "disabled" : ""}>${icon("trash", "i i-sm")}</button></td></tr>`).join("")}</tbody></table>`
         : `<div class="empty" style="padding:var(--s-6)"><div class="empty-text">No captures waiting. They show up here after a print if rendering is off or failed.</div></div>`;

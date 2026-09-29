@@ -138,13 +138,14 @@ try {
 
   if (want("theme-voron")) {
     fixture("heat", "215", "60"); await sleep(9000);
-    await shot("theme-voron", { route: "print", theme: "voron", ready: "!!document.querySelector('.a-stage .machine')", settle: 2200 });
+    await shot("theme-voron", { route: "print", theme: "voron", height: 1000, ready: "!!document.querySelector('.a-job .job-body')", settle: 2200 });
   }
   if (["dashboard", "toolpath", "mobile-print", "kiosk", "prompt"].some(want)) {
     fixture("heat", "215", "60"); await sleep(9000);   // hot before the print starts, like a real one
     await startPrintAt("twisted-vase-orca.gcode", 22);
-    if (want("dashboard")) await shot("dashboard", { route: "print", height: 1760, ready: "!!document.querySelector('.a-job .job-bar')", settle: 1200 });
-    if (want("toolpath")) await shot("toolpath", { route: "print", height: 1240, ready: "!!document.querySelector('.a-job .job-bar')", after: "document.querySelector('[data-mode=toolpath]').click()", settle: 5000 });
+    if (want("dashboard")) await shot("dashboard", { route: "print", height: 1080, ready: "!!document.querySelector('.a-job .job-bar')", settle: 1200 });
+    // the 3D preview opens from the Job panel's "3D preview" button
+    if (want("toolpath")) await shot("toolpath", { route: "print", height: 1000, ready: "!!document.querySelector('.a-job .job-bar')", after: "document.querySelector('.a-job [data-ref=preview]').click()", settle: 7000 });
     if (want("mobile-print")) await shot("mobile-print", { route: "print", width: 390, height: 844, dpr: 3, mobile: true, ready: "!!document.querySelector('.a-job .job-bar')", settle: 1200 });
     if (want("kiosk")) await shot("kiosk", { route: "kiosk", ready: "!!document.querySelector('.kiosk:not(.is-idle)')", settle: 1500 });
     if (want("prompt")) await shot("prompt", { route: "print", height: 900, ready: "!!document.querySelector('.a-job .job-bar')", after: PROMPT_FEED, settle: 1200 });

@@ -5,13 +5,14 @@ import { icon } from "mf/ui/icons.js";
 import { mf, octo } from "mf/core/api.js";
 import { can } from "mf/core/auth.js";
 import { config } from "mf/core/config.js";
-import { machineStatus, progressFrac, timeLeft } from "mf/core/status.js";
+import { progressFrac, timeLeft } from "mf/core/status.js";
 import { duration, finishTime, filamentLength, filamentGrams, grams, stripExt, relative, DASH } from "mf/core/format.js";
 import { layerAt, filamentAt } from "mf/core/jobinfo.js";
 import { confirmDialog, holdToConfirm, openDialog } from "mf/ui/dialog.js";
 import * as actions from "mf/core/actions.js";
 import * as router from "mf/core/router.js";
 import { toast } from "mf/ui/toast.js";
+import { openConnect } from "mf/ui/connect.js";
 
 const thumbBox = (path, mtime, big = false) => path
   ? `<span class="thumb ${big ? "is-lg" : ""}" data-thumb>${icon("cube")}<img alt="" loading="lazy" src="${esc(mf.thumbUrl(path, mtime))}"></span>`
@@ -74,8 +75,9 @@ export function mountJob(host) {
     <section class="panel a-job" aria-label="Current job">
       <div class="panel-head">
         <h2 class="panel-title">Job</h2>
-        <span class="chip" data-ref="chip"></span>
-        <div class="panel-tools" data-ref="tools"></div>
+        <div class="panel-tools">
+          <button class="btn btn-sm btn-ghost" data-ref="preview" hidden data-tip="See the file's toolpath in 3D">${raw(icon("layers"))}3D preview</button>
+        </div>
       </div>
       <div class="job-body" data-ref="body"></div>
     </section>`;
@@ -117,7 +119,11 @@ export function mountJob(host) {
   // second would reset a hold-to-confirm gesture in progress.
   function skeleton(mode, ctx) {
     const { file, name, ji, info, f, online } = ctx;
-    const meta = (parts) => `<div class="job-meta">${parts.filter(Boolean).map((t) => `<span>${t}</span>`).join("")}</div>`;
+    const offline = online ? "" : `
+      <div class="job-offline">
+        <div class="grow"><b>Printer offline</b><span>Connect it to print and to see live temperatures.</span></div>
+        ${can("connection") ? `<button class="btn btn-primary" data-act="connect">${icon("plug")}Connect</button>` : ""}
+      </div>`;
     const head = (big) => `<div class="job-top">${thumbBox(file.path, ji?.meta?.mtime, big)}<div class="grow" style="min-width:0"><div class="job-name">${esc(name)}</div><div data-v="meta"></div></div></div>`;
     if (mode === "active") {
       return `${head(false)}
@@ -140,28 +146,26 @@ export function mountJob(host) {
         <div class="job-actions">
           <button class="btn btn-primary" data-act="again" ${online ? "" : "disabled"}>${icon("refresh")}Print again</button>
           <button class="btn" data-act="cool" ${online ? "" : "disabled"}>${icon("snow")}Cool down</button>
-          <button class="btn btn-ghost" data-act="files">${icon("folder")}Choose another</button>
+          <button class="btn btn-ghost" data-act="files">${icon("folder")}Choose another file</button>
         </div>`;
     }
     if (mode === "ready") {
-      return `${head(true)}
+      return `${offline}${head(true)}
         ${statsHtml([["Estimated", "est"], ["Finishes", "eta"], ["Layers", "layers"], ["Nozzle", "nozzle"], ["Bed", "bed"], ["Filament", "filament"]])}
         <div class="job-actions">
           <button class="btn btn-primary btn-lg" data-act="start" ${online && can("print") ? "" : "disabled"}>${icon("play")}Start print</button>
           <button class="btn" data-act="preheat" ${online && (info.nozzleTemp || info.bedTemp) ? "" : "disabled"}>${icon("flame")}Preheat</button>
           <button class="btn btn-ghost" data-act="files">${icon("folder")}Files</button>
-        </div>
-        ${online ? "" : `<div class="hint">Connect the printer to start this print.</div>`}`;
+        </div>`;
     }
-    return `
-      <div class="empty" style="padding:var(--s-5) var(--s-2) var(--s-3)">
-        ${icon("cube")}
-        <div class="empty-title">Nothing loaded</div>
-        <p class="empty-text">Pick a file from your library, or drop a G-code file anywhere on this page to upload it.</p>
-        <button class="btn btn-primary" data-act="files">${icon("folder")}Browse files</button>
+    return `${offline}
+      <div class="job-empty">
+        <div class="empty-title">No file selected</div>
+        <p class="empty-text">Choose one in Files, or drop G-code anywhere on this page to upload it.</p>
+        <button class="btn" data-act="files">${icon("folder")}Open Files</button>
       </div>
-      ${recent?.length ? `<div class="job-recent"><div class="label" style="padding:0 var(--s-2)">Recent</div>${recent.map((rf) => `
-        <button class="recent-row" data-recent="${esc(rf.path)}">${thumbBox(rf.path, rf.date)}<span class="grow" style="min-width:0"><div class="nm truncate">${esc(stripExt(rf.display || rf.name))}</div><div class="sub">${relative(rf.date)}${rf.gcodeAnalysis?.estimatedPrintTime ? ` · ${duration(rf.gcodeAnalysis.estimatedPrintTime)}` : ""}</div></span></button>`).join("")}</div>` : ""}`;
+      ${recent?.length ? `<div class="job-recent"><div class="label">Recent files</div>${recent.map((rf) => `
+        <button class="recent-row" data-recent="${esc(rf.path)}">${thumbBox(rf.path, rf.date)}<span class="grow" style="min-width:0"><span class="nm truncate">${esc(stripExt(rf.display || rf.name))}</span><span class="sub"><span>${relative(rf.date)}</span>${rf.gcodeAnalysis?.estimatedPrintTime ? `<span>${duration(rf.gcodeAnalysis.estimatedPrintTime)}</span>` : ""}</span></span></button>`).join("")}</div>` : ""}`;
   }
 
   let currentSig = null;
@@ -169,7 +173,6 @@ export function mountJob(host) {
   function render() {
     const s = store.state;
     const f = s.printer.flags;
-    const st = machineStatus(s);
     const file = s.job?.file || {};
     const hasFile = !!file.name;
     const name = stripExt(file.display || file.name || "");
@@ -181,8 +184,7 @@ export function mountJob(host) {
     const online = f.operational || active;
     const fc = config.data.filament;
 
-    r.chip.className = "chip " + ({ ok: "is-ok", busy: "is-accent", warn: "is-warn", err: "is-err", info: "is-info" }[st.tone] || "");
-    r.chip.textContent = st.label;
+    r.preview.hidden = !hasFile || file.origin === "sdcard";
 
     const mode = active ? "active" : finished ? "done" : hasFile ? "ready" : "empty";
     const ctx = { file, name, ji, info, f, online };
@@ -241,6 +243,7 @@ export function mountJob(host) {
     q("again")?.addEventListener("click", () => startWithChecks(store.get("job.file.path")));
     q("cool")?.addEventListener("click", () => actions.cooldown());
     q("files")?.addEventListener("click", () => router.go("files"));
+    q("connect")?.addEventListener("click", () => openConnect());
     q("preheat")?.addEventListener("click", () => {
       const info = store.get("jobinfo")?.meta?.info || {};
       actions.preheat({ name: info.filamentType || "this file", nozzle: Math.round(info.nozzleTemp || 0), bed: Math.round(info.bedTemp || 0), chamber: Math.round(info.chamberTemp || 0) });
@@ -249,6 +252,20 @@ export function mountJob(host) {
       try { await actions.selectFile(b.dataset.recent); } catch { /* toast shown */ }
     }));
   }
+
+  r.preview.addEventListener("click", async () => {
+    const path = store.get("job.file.path");
+    if (!path) return;
+    r.preview.classList.add("is-busy");
+    try {
+      const [entry, viewer] = await Promise.all([octo.file(path), import("mf/ui/viewer/viewer-dialog.js")]);
+      viewer.openToolpath(entry);
+    } catch (e) {
+      toast.fail("Couldn't open the 3D preview", e);
+    } finally {
+      r.preview.classList.remove("is-busy");
+    }
+  });
 
   const offs = ["printer", "job", "progress", "jobinfo", "currentZ", "config", "net", "klipper"].map((k) => store.on(k, render));
   render();

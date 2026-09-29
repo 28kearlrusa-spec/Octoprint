@@ -43,7 +43,7 @@ export function maintenancePanel(host) {
       const frac = Math.min(1, since / task.everyHours);
       const due = frac >= 1, soon = frac >= 0.85;
       return `<div class="col" style="gap:6px"><div class="row between wrap"><span style="font-weight:500">${esc(task.name)}</span>
-        <span class="row" style="gap:var(--s-3)"><span class="${due ? "err" : soon ? "warn" : "muted"} tnum">${since.toFixed(1)} of ${task.everyHours} h${due ? " · due" : soon ? " · soon" : ""}</span>
+        <span class="row" style="gap:var(--s-3)"><span class="${due ? "err" : soon ? "warn" : "muted"} tnum">${since.toFixed(1)} of ${task.everyHours} h${due ? ", due now" : soon ? ", due soon" : ""}</span>
         <button class="btn btn-sm" data-done="${esc(task.id)}" ${can("control") ? "" : "disabled"}>${icon("check", "i i-sm")}Done</button></span></div>
         <div class="bar is-thin" style="--p:${(frac * 100).toFixed(0)}%"><i style="${due ? "background:var(--err)" : soon ? "background:var(--warn)" : ""}"></i></div>
         <div class="hint">${m?.resetAt ? `Last done ${relative(m.resetAt)}` : "Counting from your first recorded print"}</div></div>`;

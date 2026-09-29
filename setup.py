@@ -44,8 +44,8 @@ def read_readme():
 
 plugin_version = read_version()
 plugin_description = (
-    "A complete custom control surface for OctoPrint and Klipper, built for Voron-class "
-    "printers and styled in the MakerForge look."
+    "A replacement interface for OctoPrint and Klipper, made for Voron printers and styled "
+    "after the MakerForge logo."
 )
 plugin_author = "MakerForge"
 plugin_author_email = ""

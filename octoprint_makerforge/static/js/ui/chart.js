@@ -229,7 +229,7 @@ export class TempChart {
     const when = ago < 5 ? "now" : ago < 90 ? `${ago}s ago` : `${Math.round(ago / 60)} min ago`;
     this.tip.hidden = false;
     this.tip.innerHTML = `<div class="ct-when">${when}</div>` + rows.map((r) =>
-      `<div class="ct-row"><i style="background:${seriesColor(r.k)}"></i><span>${seriesLabel(r.k).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]))}</span><b>${r.a.toFixed(1)}°</b>${r.t ? `<em>→ ${Math.round(r.t)}°</em>` : ""}</div>`).join("");
+      `<div class="ct-row"><i style="background:${seriesColor(r.k)}"></i><span>${seriesLabel(r.k).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]))}</span><b>${r.a.toFixed(1)}°</b>${r.t ? `<em>of ${Math.round(r.t)}°</em>` : ""}</div>`).join("");
     const tw = this.tip.offsetWidth;
     const left = x + 14 + tw > this.w ? x - tw - 14 : x + 14;
     this.tip.style.left = `${Math.max(4, left)}px`;

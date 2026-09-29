@@ -68,7 +68,8 @@ async function resolve() {
     mod = await def.load();
   } catch (e) {
     console.error("[router] failed to load view", def.id, e);
-    stage.innerHTML = `<div class="empty"><div class="empty-title">This screen didn't load</div><p class="empty-text">${String(e.message || e).replace(/</g, "&lt;")}</p><button class="btn" onclick="location.reload()">Reload</button></div>`;
+    stage.innerHTML = `<div class="empty"><div class="empty-title">This screen didn't load</div><p class="empty-text">${String(e.message || e).replace(/</g, "&lt;")}</p><button class="btn" data-reload>Reload</button></div>`;
+    stage.querySelector("[data-reload]").addEventListener("click", () => location.reload());
     return;
   }
   if (my !== token) return;   // user already navigated elsewhere
@@ -90,6 +91,6 @@ async function resolve() {
 }
 
 function notify(route, def) {
-  document.title = `${def.title ? def.title + " · " : ""}MakerForge`;
+  document.title = `${def.title ? def.title + " – " : ""}MakerForge`;
   for (const fn of listeners) fn(route, def);
 }

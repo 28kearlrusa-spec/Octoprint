@@ -15,14 +15,10 @@ body {
   min-height: 100%;
   overflow-x: clip;
   background-color: var(--bg-1);
-  /* a bed-mesh dot grid: quiet, but it says "printer" */
-  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.6px);
-  background-size: 24px 24px;
   color: var(--tx-1);
   font-family: var(--font-body);
   font-size: var(--fs-md);
   line-height: 1.45;
-  font-feature-settings: "cv11", "ss03";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -33,11 +29,11 @@ h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
   font-style: normal;
   font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.012em;
+  line-height: 1.2;
+  letter-spacing: 0;
   color: var(--tx-1);
 }
-h1 { font-size: var(--fs-2xl); font-weight: 700; }
+h1 { font-size: var(--fs-2xl); }
 h2 { font-size: var(--fs-xl); }
 h3 { font-size: var(--fs-lg); }
 h4, h5 { font-size: var(--fs-md); }
@@ -111,7 +107,7 @@ hr {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum", "lnum";
 }
-.num { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+.num { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; }
 
 /* ~~ utilities ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 .sr-only {
@@ -159,13 +155,13 @@ hr {
 }
 .boot.is-done { opacity: 0; pointer-events: none; }
 .boot-mark {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   object-fit: cover;
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   animation: boot-pulse 1.4s var(--ease-in-out) infinite;
 }
-.boot-text { color: var(--tx-3); font-family: var(--font-display); letter-spacing: 0.02em; }
+.boot-text { color: var(--tx-3); font-family: var(--font-display); }
 .boot-fail { color: var(--tx-2); max-width: 32ch; text-align: center; }
 .boot-fail a { color: var(--accent); text-decoration: underline; }
 @keyframes boot-pulse {
