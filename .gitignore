@@ -1,0 +1,22 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+.venv/
+venv/
+
+# editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# local dev sandbox output (the scripts keep everything outside the repo, this is just in case)
+.makerforge-dev/
+dev/.local/
+*.log
+
+# generated when you run the sample generator
+dev/samples/*.gcode

@@ -1,0 +1,216 @@
+/* MakerForge UI · design tokens
+ *
+ * Brand values (lime #66ff00, pink #ff33cc, near-black #0b0b0d, Space Grotesk + Inter) come
+ * straight from the MakerForge site. Voron influence: cut corners, machined dark surfaces,
+ * 2020-extrusion slots, and a status LED. Every colour used elsewhere is a token from here.
+ */
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../fonts/SpaceGrotesk-var.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/JetBrainsMono-var.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ~~ surfaces: a machined stack, each step a little lighter ~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --bg-0: #060607;
+  --bg-1: #0b0b0d;
+  --bg-2: #101013;
+  --bg-3: #16161a;
+  --bg-4: #1d1d22;
+  --bg-5: #26262c;
+
+  --line-1: #1f1f24;
+  --line-2: #2a2a31;
+  --line-3: #3a3a43;
+  --line-4: #55555f;
+
+  --tx-1: #f4f4f6;
+  --tx-2: #b4b5bd;
+  --tx-3: #8a8b94;
+  --tx-4: #5d5e67;
+
+  /* ~~ brand ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --brand-lime: #66ff00;
+  --brand-pink: #ff33cc;
+
+  /* theme slots: overwritten by [data-theme] below */
+  --accent: #66ff00;
+  --accent-hi: #8bff3d;
+  --accent-lo: #4fd400;
+  --accent-soft: #16330a;
+  --accent-ink: #051200;
+  --accent-2: #ff33cc;
+  --accent-2-soft: #33102b;
+  --accent-rgb: 102 255 0;
+  --accent-2-rgb: 255 51 204;
+  /* the colour of a healthy, idle machine: the accent, unless the accent is red */
+  --ready: var(--accent);
+  --grad: linear-gradient(90deg, var(--accent), var(--accent-2));
+  --grad-v: linear-gradient(180deg, var(--accent), var(--accent-2));
+
+  /* ~~ semantic ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --ok: #4ade80;
+  --ok-soft: #10231a;
+  --warn: #f5b342;
+  --warn-soft: #2b230f;
+  --err: #ff5d6c;
+  --err-soft: #2b1417;
+  --info: #5cc8ff;
+  --info-soft: #0f2230;
+
+  /* heaters keep their identity in every theme so a glance is enough */
+  --heat-nozzle: #ff4fd0;
+  --heat-bed: #ffb020;
+  --heat-chamber: #38d5ff;
+  --heat-aux: #a78bfa;
+
+  /* ~~ type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --fs-2xs: 0.6875rem;  /* 11 */
+  --fs-xs: 0.75rem;     /* 12 */
+  --fs-sm: 0.8125rem;   /* 13 */
+  --fs-md: 0.875rem;    /* 14 */
+  --fs-lg: 1rem;        /* 16 */
+  --fs-xl: 1.25rem;     /* 20 */
+  --fs-2xl: 1.75rem;    /* 28 */
+  --fs-3xl: 2.5rem;     /* 40 */
+  --fs-4xl: 4rem;       /* 64 */
+
+  /* ~~ space (4px base) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+
+  /* ~~ shape: almost no radius, cut corners instead ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --r-1: 2px;
+  --r-2: 4px;
+  --cut-s: 5px;
+  --cut-m: 10px;
+  --cut-l: 16px;
+
+  /* ~~ motion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+
+  /* ~~ layout ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+  --rail-w: 76px;
+  --topbar-h: 56px;
+  --tabbar-h: 60px;
+  --gutter: 20px;
+  --maxw: 1680px;
+
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-rail: 30;
+  --z-menu: 60;
+  --z-dialog: 70;
+  --z-toast: 90;
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
+  color-scheme: dark;
+}
+
+/* ~~ themes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+:root[data-theme="forge"] {
+  /* the defaults above: lime + pink, straight from the MakerForge logo */
+}
+
+:root[data-theme="voron"] {
+  --accent: #ff3b3b;
+  --accent-hi: #ff6b6b;
+  --accent-lo: #d92626;
+  --accent-soft: #331010;
+  --accent-ink: #ffffff;
+  --accent-2: #ff8a1f;
+  --accent-2-soft: #33200c;
+  --accent-rgb: 255 59 59;
+  --accent-2-rgb: 255 138 31;
+  --ready: #4ade80;
+  --heat-nozzle: #ff6a3d;
+}
+
+:root[data-theme="ice"] {
+  --accent: #33d6ff;
+  --accent-hi: #7ae4ff;
+  --accent-lo: #16b5e0;
+  --accent-soft: #0b2530;
+  --accent-ink: #001219;
+  --accent-2: #9b7bff;
+  --accent-2-soft: #1d1738;
+  --accent-rgb: 51 214 255;
+  --accent-2-rgb: 155 123 255;
+  --heat-nozzle: #ff6fb5;
+  --heat-chamber: #7ae4ff;
+}
+
+:root[data-theme="amber"] {
+  --accent: #ffb000;
+  --accent-hi: #ffc640;
+  --accent-lo: #e09b00;
+  --accent-soft: #33260a;
+  --accent-ink: #1a1000;
+  --accent-2: #ff5f1f;
+  --accent-2-soft: #33150a;
+  --accent-rgb: 255 176 0;
+  --accent-2-rgb: 255 95 31;
+  --ready: #4ade80;
+  --heat-nozzle: #ff5f1f;
+  --heat-bed: #ffd23f;
+}
+
+/* density: compact tightens gutters and control heights for big monitors */
+:root[data-density="compact"] {
+  --gutter: 12px;
+  --s-4: 12px;
+  --s-5: 16px;
+  --s-6: 20px;
+  --topbar-h: 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+  }
+}
+:root[data-motion="reduced"] {
+  --dur-1: 1ms;
+  --dur-2: 1ms;
+  --dur-3: 1ms;
+}

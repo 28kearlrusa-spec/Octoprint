@@ -1,0 +1,112 @@
+/* MakerForge skin for OctoPrint's classic UI.
+ *
+ * Everything is scoped to html.mf-skin, which classic.js toggles from the plugin setting, so
+ * turning the skin off in OctoPrint's settings removes every rule below. Colours only: no
+ * layout is touched, so other plugins' tabs keep working.
+ */
+html.mf-skin {
+  --mf-bg: #0b0b0d; --mf-bg2: #101013; --mf-bg3: #16161a; --mf-bg4: #1d1d22;
+  --mf-line: #2a2a31; --mf-line2: #3a3a43;
+  --mf-tx: #f4f4f6; --mf-tx2: #b4b5bd; --mf-tx3: #8a8b94;
+  --mf-lime: #66ff00; --mf-lime-lo: #4fd400; --mf-pink: #ff33cc; --mf-red: #ff5d6c;
+  color-scheme: dark;
+}
+html.mf-skin body {
+  background: var(--mf-bg);
+  color: var(--mf-tx);
+  font-family: Inter, ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+html.mf-skin a { color: var(--mf-lime); }
+html.mf-skin a:hover { color: #8bff3d; }
+html.mf-skin h1, html.mf-skin h2, html.mf-skin h3, html.mf-skin h4 { color: var(--mf-tx); }
+html.mf-skin hr { border-color: var(--mf-line); }
+html.mf-skin .muted, html.mf-skin small, html.mf-skin .help-block, html.mf-skin .help-inline { color: var(--mf-tx3); }
+
+/* top bar */
+html.mf-skin .navbar-inner, html.mf-skin .navbar-static-top .navbar-inner, html.mf-skin #navbar .navbar-inner {
+  background: var(--mf-bg) !important; background-image: none !important; border: 0; border-bottom: 1px solid var(--mf-line);
+  box-shadow: none; filter: none;
+}
+html.mf-skin .navbar .brand, html.mf-skin .navbar .nav > li > a, html.mf-skin .navbar-text { color: var(--mf-tx2); text-shadow: none; }
+html.mf-skin .navbar .nav > li > a:hover, html.mf-skin .navbar .nav > li > a:focus { color: var(--mf-tx); background: var(--mf-bg3); }
+html.mf-skin .navbar .nav > .open > a, html.mf-skin .navbar .nav .active > a { background: var(--mf-bg3); color: var(--mf-lime); box-shadow: none; }
+html.mf-skin .makerforge-nav-link > a { color: var(--mf-lime) !important; font-weight: 600; }
+
+/* panels */
+html.mf-skin .accordion-group, html.mf-skin .well, html.mf-skin .modal, html.mf-skin .popover, html.mf-skin .dropdown-menu {
+  background: var(--mf-bg2); border-color: var(--mf-line); color: var(--mf-tx); box-shadow: none;
+}
+html.mf-skin .well { border: 1px solid var(--mf-line); }
+html.mf-skin .accordion-heading, html.mf-skin .accordion-heading .accordion-toggle { background: var(--mf-bg2); color: var(--mf-tx); }
+html.mf-skin .accordion-inner { border-top-color: var(--mf-line); }
+html.mf-skin .modal-header, html.mf-skin .modal-footer { background: var(--mf-bg3); border-color: var(--mf-line); }
+html.mf-skin .modal-backdrop { background: #000; }
+html.mf-skin .dropdown-menu > li > a { color: var(--mf-tx2); }
+html.mf-skin .dropdown-menu > li > a:hover, html.mf-skin .dropdown-menu > li > a:focus { background: var(--mf-bg4); color: var(--mf-tx); }
+html.mf-skin .dropdown-menu .divider { background: var(--mf-line); border-bottom-color: transparent; }
+
+/* tabs */
+html.mf-skin .nav-tabs { border-bottom-color: var(--mf-line); }
+html.mf-skin .nav-tabs > li > a { color: var(--mf-tx3); border-color: transparent; background: transparent; }
+html.mf-skin .nav-tabs > li > a:hover { background: var(--mf-bg3); border-color: transparent; color: var(--mf-tx); }
+html.mf-skin .nav-tabs > .active > a, html.mf-skin .nav-tabs > .active > a:hover {
+  background: var(--mf-bg2); color: var(--mf-lime); border-color: var(--mf-line); border-bottom-color: var(--mf-bg2);
+}
+html.mf-skin .nav-list > li > a, html.mf-skin .nav-list .nav-header { text-shadow: none; }
+html.mf-skin .nav-list > .active > a { background: var(--mf-lime); color: #051200; }
+html.mf-skin .tab-content { background: transparent; }
+
+/* forms */
+html.mf-skin input[type="text"], html.mf-skin input[type="password"], html.mf-skin input[type="number"], html.mf-skin input[type="search"],
+html.mf-skin input[type="email"], html.mf-skin input[type="url"], html.mf-skin select, html.mf-skin textarea, html.mf-skin .uneditable-input {
+  background: var(--mf-bg); color: var(--mf-tx); border-color: var(--mf-line); box-shadow: none;
+}
+html.mf-skin input:focus, html.mf-skin select:focus, html.mf-skin textarea:focus { border-color: var(--mf-lime); box-shadow: 0 0 0 1px var(--mf-lime); }
+html.mf-skin input[disabled], html.mf-skin select[disabled], html.mf-skin textarea[disabled] { background: var(--mf-bg2); color: var(--mf-tx3); }
+html.mf-skin ::placeholder { color: #5d5e67; }
+html.mf-skin .input-append .add-on, html.mf-skin .input-prepend .add-on { background: var(--mf-bg3); color: var(--mf-tx2); border-color: var(--mf-line); text-shadow: none; }
+html.mf-skin label, html.mf-skin .control-label { color: var(--mf-tx2); }
+
+/* buttons */
+html.mf-skin .btn {
+  background: var(--mf-bg4); background-image: none; color: var(--mf-tx); border-color: var(--mf-line2); text-shadow: none; box-shadow: none;
+}
+html.mf-skin .btn:hover, html.mf-skin .btn:focus { background: #26262c; color: var(--mf-tx); }
+html.mf-skin .btn.disabled, html.mf-skin .btn[disabled] { background: var(--mf-bg3); color: #5d5e67; opacity: 1; }
+html.mf-skin .btn-primary, html.mf-skin .btn-info { background: var(--mf-lime); border-color: var(--mf-lime); color: #051200; font-weight: 600; }
+html.mf-skin .btn-primary:hover, html.mf-skin .btn-primary:focus, html.mf-skin .btn-info:hover { background: #8bff3d; color: #051200; }
+html.mf-skin .btn-primary.disabled, html.mf-skin .btn-primary[disabled] { background: #244a10; border-color: #244a10; color: #6a8d58; }
+html.mf-skin .btn-danger { background: transparent; color: var(--mf-red); border-color: rgb(255 93 108 / 0.55); }
+html.mf-skin .btn-danger:hover { background: var(--mf-red); color: #1a0407; }
+html.mf-skin .btn-group > .btn.active, html.mf-skin .btn.active { background: #26262c; color: var(--mf-lime); box-shadow: inset 0 -2px 0 var(--mf-lime); }
+
+/* tables, alerts, progress */
+html.mf-skin .table th, html.mf-skin .table td { border-top-color: var(--mf-line); }
+html.mf-skin .table-striped tbody > tr:nth-child(odd) > td, html.mf-skin .table-striped tbody > tr:nth-child(odd) > th { background: var(--mf-bg3); }
+html.mf-skin .table-hover tbody tr:hover > td { background: var(--mf-bg4); }
+html.mf-skin .table-bordered, html.mf-skin .table-bordered th, html.mf-skin .table-bordered td { border-color: var(--mf-line); }
+html.mf-skin .progress { background: var(--mf-bg); background-image: none; box-shadow: none; border: 1px solid var(--mf-line); }
+html.mf-skin .progress .bar, html.mf-skin .progress-info .bar {
+  background: linear-gradient(90deg, var(--mf-lime), var(--mf-pink)); background-image: linear-gradient(90deg, var(--mf-lime), var(--mf-pink)); box-shadow: none;
+}
+html.mf-skin .alert { background: #2b230f; color: #f5b342; border-color: rgb(245 179 66 / 0.4); text-shadow: none; }
+html.mf-skin .alert-error, html.mf-skin .alert-danger { background: #2b1417; color: var(--mf-red); border-color: rgb(255 93 108 / 0.4); }
+html.mf-skin .alert-success { background: #10231a; color: #4ade80; border-color: rgb(74 222 128 / 0.35); }
+html.mf-skin .alert-info { background: #0f2230; color: #5cc8ff; border-color: rgb(92 200 255 / 0.35); }
+html.mf-skin .label, html.mf-skin .badge { text-shadow: none; }
+
+/* OctoPrint specifics */
+html.mf-skin #temperature-graph { background-color: var(--mf-bg2); }
+html.mf-skin #temperature-graph .legend, html.mf-skin #temperature-graph .tickLabel { color: var(--mf-tx3) !important; }
+html.mf-skin #terminal-output { background: #070708; color: var(--mf-tx2); border-color: var(--mf-line); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+html.mf-skin #terminal-sendpanel input, html.mf-skin #terminal-sendpanel .btn { border-color: var(--mf-line2); }
+html.mf-skin #files .entry, html.mf-skin .gcode_files .entry { border-bottom-color: var(--mf-line); }
+html.mf-skin #files .entry:hover, html.mf-skin .gcode_files .entry:hover { background: var(--mf-bg3); }
+html.mf-skin #files .entry .title, html.mf-skin .gcode_files .entry .title { color: var(--mf-tx); }
+html.mf-skin #state_wrapper .accordion-inner, html.mf-skin #sidebar .accordion-inner { color: var(--mf-tx2); }
+html.mf-skin .fa-solid, html.mf-skin .fa-regular, html.mf-skin .fas, html.mf-skin .far { text-shadow: none; }
+html.mf-skin #footer, html.mf-skin .footer { background: transparent; border-top: 1px solid var(--mf-line); }
+html.mf-skin ::selection { background: rgb(102 255 0 / 0.3); color: var(--mf-tx); }
+html.mf-skin *::-webkit-scrollbar { width: 10px; height: 10px; }
+html.mf-skin *::-webkit-scrollbar-thumb { background: var(--mf-line2); border: 2px solid var(--mf-bg); border-radius: 6px; }
+html.mf-skin *::-webkit-scrollbar-track { background: transparent; }

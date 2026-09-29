@@ -1,0 +1,64 @@
+<!doctype html>
+{#- The whole app is one static page. It must contain nothing user specific: OctoPrint caches it. -#}
+<html lang="en" data-theme="forge" data-density="comfortable">
+<head>
+  <meta charset="utf-8">
+  <title>MakerForge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MakerForge">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  {%- set sb = boot.staticBase %}
+  <link rel="manifest" href="{{ boot.pluginBase }}/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ sb }}/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="{{ sb }}/img/favicon-64.png">
+  <link rel="apple-touch-icon" href="{{ sb }}/img/icon-192.png">
+
+  <link rel="preload" href="{{ sb }}/fonts/SpaceGrotesk-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ sb }}/fonts/Inter-var.woff2" as="font" type="font/woff2" crossorigin>
+
+  <link rel="stylesheet" href="{{ sb }}/css/tokens.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ sb }}/css/base.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ sb }}/css/components.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ sb }}/css/shell.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ sb }}/css/views.css?v={{ asset_v }}">
+
+  <script type="application/json" id="mf-boot">{{ boot|tojson }}</script>
+  <script type="importmap">{{ import_map|tojson }}</script>
+</head>
+<body>
+  <div id="boot" class="boot" role="status" aria-live="polite">
+    <img class="boot-mark" src="{{ sb }}/img/icon-192.png" alt="" width="72" height="72">
+    <p class="boot-text">Starting MakerForge&hellip;</p>
+    <p class="boot-fail" hidden>
+      This browser is too old for the MakerForge UI.
+      <a href="{{ boot.classicUrl }}">Open the classic OctoPrint UI</a>
+    </p>
+  </div>
+  <div id="app" hidden></div>
+  <div id="overlays"></div>
+
+  <noscript>
+    <p class="boot-fail" style="display:block">
+      MakerForge needs JavaScript. <a href="{{ boot.classicUrl }}">Open the classic OctoPrint UI</a>
+    </p>
+  </noscript>
+
+  <script>
+    // Browsers without import map support cannot run the app; tell people how to get out.
+    (function () {
+      var ok = window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports("importmap");
+      if (!ok) {
+        var f = document.querySelector("#boot .boot-fail"), t = document.querySelector("#boot .boot-text");
+        if (f) f.hidden = false;
+        if (t) t.hidden = true;
+      }
+    })();
+  </script>
+  <script type="module" src="{{ sb }}/js/app.js?v={{ asset_v }}"></script>
+</body>
+</html>
