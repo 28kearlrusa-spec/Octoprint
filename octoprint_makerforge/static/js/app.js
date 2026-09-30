@@ -1,4 +1,4 @@
-// MakerForge UI: entry point
+// MakerPrint UI: entry point
 import { store, bus } from "mf/core/store.js";
 import { boot, octo } from "mf/core/api.js";
 import * as auth from "mf/core/auth.js";
@@ -153,7 +153,7 @@ async function main() {
 
 main().catch((e) => {
   console.error("[boot] fatal", e);
-  bootEl.querySelector(".boot-text").textContent = "Couldn't start the MakerForge UI.";
+  bootEl.querySelector(".boot-text").textContent = "Couldn't start the MakerPrint UI.";
   const f = bootEl.querySelector(".boot-fail");
   f.hidden = false;
   f.append(document.createElement("br"), Object.assign(document.createElement("code"), { textContent: String(e.message || e) }));

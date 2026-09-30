@@ -1,4 +1,4 @@
-/* MakerForge UI · component library
+/* MakerPrint UI · component library
  *
  * Panels and buttons carry a small chamfer on the top-left and bottom-right corners, like
  * Voron printed parts. clip-path cannot draw a border, so each chamfer is stroked with a 1px

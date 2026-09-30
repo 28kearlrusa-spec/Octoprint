@@ -1,4 +1,4 @@
-/* MakerForge UI · app shell: rail, top bar, tab bar, status LED, login */
+/* MakerPrint UI · app shell: rail, top bar, tab bar, status LED, login */
 
 .shell {
   display: grid;
@@ -304,3 +304,6 @@
 .netbar.is-alert { background: var(--err-soft); border-bottom-color: rgb(var(--err-rgb) / 0.5); color: var(--err); }
 .netbar .netbar-ic { display: inline-flex; }
 .login-mfa { display: grid; gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 1px solid var(--line-2); background: var(--bg-3); color: var(--tx-2); font-size: var(--fs-sm); }
+.login-brand { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-6) var(--s-6) 0; }
+.login-brand img { width: 56px; height: 56px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.login-brand span { font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 600; }

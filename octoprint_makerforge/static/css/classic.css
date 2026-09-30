@@ -1,11 +1,11 @@
-/* MakerForge skin for OctoPrint's classic UI.
+/* MakerPrint skin for OctoPrint's classic UI.
  *
  * Everything is scoped to html.mf-skin, which classic.js toggles from the plugin setting, so
  * turning the skin off in OctoPrint's settings removes every rule below. Colours only: no
  * layout is touched, so other plugins' tabs keep working.
  */
 html.mf-skin {
-  /* the same graphite and logo colours as the MakerForge UI (see tokens.css) */
+  /* the same graphite and logo colours as the MakerPrint UI (see tokens.css) */
   --mf-bg: #17181b; --mf-bg2: #1d1f22; --mf-bg3: #232529; --mf-bg4: #2a2d31;
   --mf-line: #2f3236; --mf-line2: #3b3f44;
   --mf-tx: #eceef0; --mf-tx2: #b8bcc1; --mf-tx3: #8b9096;

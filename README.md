@@ -1,6 +1,6 @@
-# MakerForge UI for OctoPrint
+# MakerPrint UI for OctoPrint
 
-A replacement interface for **OctoPrint + Klipper**, made for a Voron and styled after the MakerForge logo. It takes over OctoPrint's main page; the classic interface stays one click away (or add `?classic` to the address).
+A replacement interface for **OctoPrint + Klipper**, made for a Voron and styled after the MakerPrint logo. It takes over OctoPrint's main page; the classic interface stays one click away (or add `?classic` to the address).
 
 Works with OctoPrint 1.9 and newer (developed against 1.11) on Python 3.7+. There is nothing else to install: no Node, no build step, no extra Python packages.
 
@@ -59,7 +59,7 @@ Updates appear in OctoPrint's **Software Update** like any other plugin, from th
 
 - Add `?classic` to the address, for example `http://your-printer/?classic`.
 - Or use *Classic OctoPrint UI* in the account menu.
-- Or, in the classic Settings dialog, untick **MakerForge UI > Use the MakerForge UI as the main page**.
+- Or, in the classic Settings dialog, untick **MakerPrint UI > Use the MakerPrint UI as the main page**.
 
 ## Using it away from home
 
@@ -127,6 +127,6 @@ The front end is plain ES modules loaded through an import map with content-hash
 
 ## Credits
 
-Fonts: IBM Plex Sans and IBM Plex Mono, under the SIL Open Font License 1.1 (`octoprint_makerforge/static/fonts/OFL.txt`). Logo and colours: MakerForge. The camera image in the screenshots is a photo by Jakub Zerdzicki on Pexels. Built on [OctoPrint](https://octoprint.org).
+Fonts: IBM Plex Sans and IBM Plex Mono, under the SIL Open Font License 1.1 (`octoprint_makerforge/static/fonts/OFL.txt`). Logo and colours: MakerPrint. The camera image in the screenshots is a photo by Jakub Zerdzicki on Pexels. Built on [OctoPrint](https://octoprint.org).
 
 Licensed AGPLv3, like OctoPrint itself.

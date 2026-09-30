@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Packaging for the MakerForge UI plugin for OctoPrint.
+"""Packaging for the MakerPrint UI plugin for OctoPrint.
 
 Install from inside OctoPrint (Plugin Manager > Get More > "... from an URL"):
 
@@ -22,7 +22,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 plugin_identifier = "makerforge"
 plugin_package = "octoprint_makerforge"
-plugin_name = "MakerForge UI"
+plugin_name = "MakerPrint UI"
 
 
 def read_version():
@@ -45,9 +45,9 @@ def read_readme():
 plugin_version = read_version()
 plugin_description = (
     "A replacement interface for OctoPrint and Klipper, made for Voron printers and styled "
-    "after the MakerForge logo."
+    "after the MakerPrint logo."
 )
-plugin_author = "MakerForge"
+plugin_author = "MakerPrint"
 plugin_author_email = ""
 plugin_url = "https://github.com/28kearlrusa-spec/Octoprint"
 plugin_license = "AGPLv3"

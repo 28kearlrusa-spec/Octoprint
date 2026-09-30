@@ -91,6 +91,6 @@ async function resolve() {
 }
 
 function notify(route, def) {
-  document.title = `${def.title ? def.title + " – " : ""}MakerForge`;
+  document.title = `${def.title ? def.title + " – " : ""}MakerPrint`;
   for (const fn of listeners) fn(route, def);
 }

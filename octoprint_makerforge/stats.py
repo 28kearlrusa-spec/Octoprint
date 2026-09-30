@@ -43,7 +43,7 @@ class StatsStore(object):
         except IOError:
             return self._empty()
         except ValueError:
-            self._log.exception("Unreadable MakerForge stats, starting fresh")
+            self._log.exception("Unreadable MakerPrint stats, starting fresh")
             try:
                 os.replace(self._path, self._path + ".corrupt")
             except OSError:

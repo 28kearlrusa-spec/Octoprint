@@ -1,5 +1,5 @@
 # coding=utf-8
-"""MakerForge UI: a complete custom control surface for OctoPrint and Klipper.
+"""MakerPrint UI: a complete custom control surface for OctoPrint and Klipper.
 
 The plugin does three jobs:
 
@@ -30,14 +30,14 @@ from .services import FileMeta
 from .stats import StatsStore
 from .store import ConfigStore, ConflictError
 
-__plugin_name__ = "MakerForge UI"
+__plugin_name__ = "MakerPrint UI"
 __plugin_pythoncompat__ = ">=3.7,<4"
 __plugin_version__ = __version__
 __plugin_description__ = (
     "A replacement interface for OctoPrint and Klipper, made for Voron printers and styled "
-    "after the MakerForge logo."
+    "after the MakerPrint logo."
 )
-__plugin_author__ = "MakerForge"
+__plugin_author__ = "MakerPrint"
 __plugin_url__ = "https://github.com/28kearlrusa-spec/Octoprint"
 __plugin_license__ = "AGPLv3"
 
@@ -112,7 +112,7 @@ class MakerForgePlugin(
         self._meta = FileMeta(self.get_plugin_data_folder(), self._resolve_local, self._log)
         self._stats = StatsStore(self.get_plugin_data_folder(), self._log)
         self._log.info(
-            "MakerForge UI %s ready (default UI: %s)",
+            "MakerPrint UI %s ready (default UI: %s)",
             __version__,
             "on" if self._settings.get_boolean(["default_ui"]) else "off",
         )
@@ -129,7 +129,7 @@ class MakerForgePlugin(
         return dict(
             # take over the main page at "/". Users can always reach the stock UI at "/?classic"
             default_ui=True,
-            # lightly restyle OctoPrint's classic UI with the MakerForge palette
+            # lightly restyle OctoPrint's classic UI with the MakerPrint palette
             classic_skin=True,
             # outgoing notifications: [{name, type: json|discord|slack|ntfy, url, events: [...], enabled}]
             webhooks=[],
@@ -278,7 +278,7 @@ class MakerForgePlugin(
     def get_template_configs(self):
         return [
             dict(type="navbar", template="makerforge_navbar.jinja2", custom_bindings=False),
-            dict(type="settings", name="MakerForge UI", template="makerforge_settings.jinja2", custom_bindings=False),
+            dict(type="settings", name="MakerPrint UI", template="makerforge_settings.jinja2", custom_bindings=False),
         ]
 
     def get_assets(self):
@@ -307,8 +307,8 @@ class MakerForgePlugin(
         base = flask.request.script_root or ""
         static = "{}/plugin/makerforge/static".format(base)
         data = {
-            "name": "MakerForge Control",
-            "short_name": "MakerForge",
+            "name": "MakerPrint Control",
+            "short_name": "MakerPrint",
             "description": "Control surface for your OctoPrint and Klipper printer.",
             "start_url": "{}/".format(base) if self._settings.get_boolean(["default_ui"]) else "{}/plugin/makerforge/".format(base),
             "scope": "{}/".format(base),
@@ -506,7 +506,7 @@ class MakerForgePlugin(
     def get_update_information(self):
         return dict(
             makerforge=dict(
-                displayName="MakerForge UI",
+                displayName="MakerPrint UI",
                 displayVersion=__version__,
                 type="github_release",
                 user="28kearlrusa-spec",

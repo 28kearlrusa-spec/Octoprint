@@ -26,7 +26,7 @@ EVENTS = {
     "PrintPaused": ("Print paused", 4),
     "Error": ("Printer error", 5),
 }
-# the MakerForge palette: logo green for good news, red for failures, amber in between
+# the MakerPrint palette: logo green for good news, red for failures, amber in between
 DISCORD_COLORS = {"PrintStarted": 0x86D929, "PrintDone": 0x86D929, "PrintFailed": 0xEF5F6B,
                   "PrintCancelled": 0xE3B341, "PrintPaused": 0xE3B341, "Error": 0xEF5F6B}
 

@@ -10,7 +10,7 @@ export function showLogin(root, { message = "" } = {}) {
     const el = html`
       <div class="login">
         <form class="login-card cut" novalidate>
-          <div class="login-banner"><img src="${boot.staticBase}/img/logo-banner.jpg" alt="MakerForge" width="1600" height="399"></div>
+          <div class="login-brand"><img src="${boot.staticBase}/img/icon-192.png" alt="" width="56" height="56"><span>MakerPrint</span></div>
           <div class="login-body">
             <div>
               <h1>Sign in to your printer</h1>
@@ -36,7 +36,7 @@ export function showLogin(root, { message = "" } = {}) {
             </div>
             <div class="login-foot">
               <a class="link" href="${boot.classicUrl}">Use the classic OctoPrint UI</a>
-              <span>MakerForge ${boot.version}</span>
+              <span>MakerPrint ${boot.version}</span>
             </div>
           </div>
         </form>

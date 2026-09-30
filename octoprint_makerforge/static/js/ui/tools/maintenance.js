@@ -25,7 +25,7 @@ export function maintenancePanel(host) {
   }
 
   function render() {
-    if (!stats) { r.body.innerHTML = `<div class="callout is-info">${icon("info")}<div>Usage tracking isn't available. It needs the MakerForge plugin's stats endpoint.</div></div>`; return; }
+    if (!stats) { r.body.innerHTML = `<div class="callout is-info">${icon("info")}<div>Usage tracking isn't available. It needs the MakerPrint plugin's stats endpoint.</div></div>`; return; }
     const t = stats.totals;
     const fc = config.data.filament;
     const rate = t.prints ? Math.round((t.success / t.prints) * 100) : null;

@@ -57,7 +57,7 @@ export const prefs = {
 };
 
 export const THEMES = [
-  { id: "forge", name: "MakerForge", note: "Green and pink from the logo", swatch: ["#86d929", "#e951b0"] },
+  { id: "forge", name: "MakerPrint", note: "Green and pink from the logo", swatch: ["#86d929", "#e951b0"] },
   { id: "voron", name: "Voron", note: "Red and orange on graphite", swatch: ["#e4412f", "#f08a3a"] },
   { id: "ice", name: "Ice", note: "Blue with violet", swatch: ["#52b8e6", "#9a86ea"] },
   { id: "amber", name: "Amber", note: "Amber with orange", swatch: ["#e9a53a", "#ec6d3a"] },

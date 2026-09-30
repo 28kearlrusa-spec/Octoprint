@@ -1,10 +1,10 @@
-/* MakerForge helpers for OctoPrint's classic UI.
+/* MakerPrint helpers for OctoPrint's classic UI.
  *
- * This file is bundled into OctoPrint's own page (not the MakerForge app). It only toggles the
+ * This file is bundled into OctoPrint's own page (not the MakerPrint app). It only toggles the
  * `mf-skin` class from the plugin setting, so the skin in classic.css can be switched off.
  */
 $(function () {
-    function MakerForgeClassicViewModel(parameters) {
+    function MakerPrintClassicViewModel(parameters) {
         var self = this;
         self.settings = parameters[0];
 
@@ -22,7 +22,7 @@ $(function () {
     }
 
     OCTOPRINT_VIEWMODELS.push({
-        construct: MakerForgeClassicViewModel,
+        construct: MakerPrintClassicViewModel,
         dependencies: ["settingsViewModel"],
         elements: []
     });

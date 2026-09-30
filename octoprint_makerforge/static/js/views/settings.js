@@ -337,12 +337,12 @@ const BUILDERS = {
     if (!can("settings")) { section(host, "Interface", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Only an administrator can change these.</div></div>`); return; }
     const s = store.get("settings")?.plugins?.makerforge || {};
     const set = async (patch) => { try { await octo.saveSettings({ plugins: { makerforge: patch } }); toast.ok("Saved", "", { timeout: 1400 }); store.set("settings", await octo.settings()); } catch (e) { toast.fail("Couldn't save", e); } };
-    const def = html`<label class="check"><input type="checkbox" ${s.default_ui !== false ? "checked" : ""}> Use MakerForge as the main page of this OctoPrint</label>`;
+    const def = html`<label class="check"><input type="checkbox" ${s.default_ui !== false ? "checked" : ""}> Use MakerPrint as the main page of this OctoPrint</label>`;
     def.querySelector("input").addEventListener("change", async (e) => {
-      if (!e.target.checked && !(await confirmDialog({ title: "Go back to the classic page?", text: "The MakerForge UI stays available at /plugin/makerforge/ and from the OctoPrint navbar.", confirm: "Use classic" }))) { e.target.checked = true; return; }
+      if (!e.target.checked && !(await confirmDialog({ title: "Go back to the classic page?", text: "The MakerPrint UI stays available at /plugin/makerforge/ and from the OctoPrint navbar.", confirm: "Use classic" }))) { e.target.checked = true; return; }
       set({ default_ui: e.target.checked });
     });
-    const skin = html`<label class="check"><input type="checkbox" ${s.classic_skin !== false ? "checked" : ""}> Give the classic OctoPrint UI the MakerForge colours</label>`;
+    const skin = html`<label class="check"><input type="checkbox" ${s.classic_skin !== false ? "checked" : ""}> Give the classic OctoPrint UI the MakerPrint colours</label>`;
     skin.querySelector("input").addEventListener("change", (e) => set({ classic_skin: e.target.checked }));
     section(host, "Interface", "this changes OctoPrint for everyone", def, skin,
       html`<div class="hint">If you ever need the stock page back, add <code>?classic</code> to the address (for example <code>${location.origin}/?classic</code>).</div>`);
@@ -370,7 +370,7 @@ const BUILDERS = {
 
   about(host) {
     const s = store.get("server");
-    const kv = html`<dl class="kv"><dt>MakerForge UI</dt><dd>${boot.version}</dd><dt>OctoPrint</dt><dd>${s.version || "–"}</dd><dt>Python</dt><dd>${s.pythonVersion || "–"}</dd><dt>Signed in as</dt><dd>${store.get("auth.name") || "guest"}</dd></dl>`;
+    const kv = html`<dl class="kv"><dt>MakerPrint UI</dt><dd>${boot.version}</dd><dt>OctoPrint</dt><dd>${s.version || "–"}</dd><dt>Python</dt><dd>${s.pythonVersion || "–"}</dd><dt>Signed in as</dt><dd>${store.get("auth.name") || "guest"}</dd></dl>`;
     const keys = html`<div class="col gap-2"><h3>Shortcuts</h3><div class="row wrap gap-4"><span><kbd>Ctrl</kbd> <kbd>K</kbd> command palette</span><span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move X and Y (Control)</span><span><kbd>PgUp</kbd><kbd>PgDn</kbd> move Z (Control)</span></div></div>`;
     const links = html`<div class="row wrap"><a class="btn" href="${boot.classicUrl}">${raw(icon("external"))}Classic OctoPrint UI</a><a class="btn btn-ghost" target="_blank" rel="noopener" href="https://github.com/28kearlrusa-spec/Octoprint">${raw(icon("external"))}Project on GitHub</a></div>`;
     section(host, "About", "", kv, keys, links,

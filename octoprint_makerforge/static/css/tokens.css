@@ -1,6 +1,6 @@
-/* MakerForge UI · design tokens
+/* MakerPrint UI · design tokens
  *
- * Colour comes from the MakerForge logo itself: its letters run from green (#86d929) at the
+ * Colour comes from the MakerPrint logo itself: its letters run from green (#86d929) at the
  * top to pink (#e951b0) at the bottom. Surfaces are a neutral graphite, like the brick wall
  * behind the lettering, dark enough for a workshop at night. Corners are chamfered the way
  * Voron parts are. Every colour used elsewhere is a token from here.
@@ -177,7 +177,7 @@
 /* ~~ themes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 :root[data-theme="forge"] {
-  /* the defaults above: green and pink from the MakerForge logo */
+  /* the defaults above: green and pink from the MakerPrint logo */
 }
 
 :root[data-theme="voron"] {

@@ -1,5 +1,5 @@
 // Works out which webcam stream to show. OctoPrint 1.10+ keeps the URLs in the classic webcam
-// plugin's settings; older versions use webcam.streamUrl. The shared MakerForge config can
+// plugin's settings; older versions use webcam.streamUrl. The shared MakerPrint config can
 // override both (useful when the camera lives behind a different port or proxy).
 import { store } from "mf/core/store.js";
 import { config } from "mf/core/config.js";

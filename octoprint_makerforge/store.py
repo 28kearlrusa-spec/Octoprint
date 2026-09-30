@@ -44,7 +44,7 @@ class ConfigStore(object):
         except IOError:
             return copy.deepcopy(DEFAULT_CONFIG)
         except ValueError:
-            self._log.exception("Unreadable MakerForge config, starting from defaults")
+            self._log.exception("Unreadable MakerPrint config, starting from defaults")
             self._backup_corrupt()
             return copy.deepcopy(DEFAULT_CONFIG)
 
