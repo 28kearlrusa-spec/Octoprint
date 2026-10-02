@@ -14,10 +14,11 @@ export const PANELS = [
   { id: "klipper", name: "Klipper", note: "State, last calibration results, restarts", h: 300 },
   { id: "system", name: "System", note: "Host, connection, storage and power", h: 300 },
   { id: "usage", name: "Usage", note: "Totals, the last two weeks and the next maintenance job", h: 260 },
+  { id: "plugins", name: "Plugins", note: "Every installed plugin's sidebar panel, working as in classic OctoPrint", h: 360 },
 ];
 
 export const DEFAULT_PANELS = {
-  forge: ["job", "camera", "temps", "tune"],
+  forge: ["job", "camera", "temps", "tune", "plugins"],
   studio: PANELS.map((p) => p.id),
 };
 

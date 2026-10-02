@@ -29,6 +29,7 @@ const SECTIONS = [
   ["upkeep", "Maintenance", "wrench"],
   ["notify", "Notifications", "bell"],
   ["interface", "Interface", "settings"],
+  ["plugins", "Plugin Manager", "plugin"],
   ["updates", "Updates", "download"],
   ["octoprint", "OctoPrint settings", "cpu"],
   ["data", "Data", "save"],
@@ -109,6 +110,24 @@ function seg(options, current, onPick) {
     onPick(b.dataset.v);
   });
   return s;
+}
+
+// OctoPrint's own settings dialog, shown as part of this page (see core/classic-frame.js)
+function embedClassicSettings(host, pane, full, note) {
+  const wrap = html`<section class="panel plug-frame-panel">
+    <div class="plug-frame" data-ref="frame"><div class="plug-state" data-ref="state">${raw(icon("refresh", "i spin"))}<span>Opening OctoPrint's settings. On a Raspberry Pi this takes a few seconds.</span></div></div></section>`;
+  const r = refs(wrap);
+  host.append(wrap, html`<p class="hint">${note}</p>`);
+  const cf = createClassicFrame(r.frame);
+  cf.ready.then(() => {
+    const id = pane || cf.parts().firstSettings;
+    r.state.remove();
+    cf.frame.classList.add("is-ready");
+    cf.show({ kind: "settings", id, full });
+  }).catch((e) => {
+    r.state.innerHTML = `${icon("alert")}<span>${esc(e.message || "OctoPrint's settings didn't load.")} <a class="link" href="${esc(boot.classicUrl)}" target="_blank" rel="noopener">Open the classic page</a></span>`;
+  });
+  return () => cf.destroy();
 }
 
 const BUILDERS = {
@@ -563,25 +582,21 @@ const BUILDERS = {
     return () => { alive = false; off(); clearInterval(waitTimer); };
   },
 
+  plugins(host) {
+    if (!can("settings")) {
+      section(host, "Plugin Manager", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Only an administrator can install or remove plugins.</div></div>`);
+      return;
+    }
+    return embedClassicSettings(host, "settings_plugin_pluginmanager", false,
+      "Install, update, turn on or off and remove plugins. Each plugin's own pages and panels are under Plugins in the navigation.");
+  },
+
   octoprint(host) {
     if (!can("settings")) {
       section(host, "OctoPrint settings", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Only an administrator can change OctoPrint's own settings.</div></div>`);
       return;
     }
-    const wrap = html`<section class="panel plug-frame-panel" aria-label="OctoPrint settings">
-      <div class="plug-frame" data-ref="frame"><div class="plug-state" data-ref="state">${raw(icon("refresh", "i spin"))}<span>Opening OctoPrint's settings. On a Raspberry Pi this takes a few seconds.</span></div></div></section>`;
-    const r = refs(wrap);
-    host.append(wrap, html`<p class="hint">Every OctoPrint and plugin setting, in OctoPrint's own settings dialog. Save inside it as usual.</p>`);
-    const cf = createClassicFrame(r.frame);
-    cf.ready.then(() => {
-      const first = cf.parts().firstSettings;
-      r.state.remove();
-      cf.frame.classList.add("is-ready");
-      cf.show({ kind: "settings", id: first, full: true });
-    }).catch((e) => {
-      r.state.innerHTML = `${icon("alert")}<span>${esc(e.message || "OctoPrint's settings didn't load.")} <a class="link" href="${esc(boot.classicUrl)}" target="_blank" rel="noopener">Open the classic page</a></span>`;
-    });
-    return () => cf.destroy();
+    return embedClassicSettings(host, null, true, "Every OctoPrint and plugin setting, in OctoPrint's own settings dialog. Save inside it as usual.");
   },
 
   data(host) {

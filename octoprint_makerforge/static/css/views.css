@@ -643,3 +643,7 @@
 .up-item .up-name b { display: block; font-weight: 600; }
 .up-item .up-name span { color: var(--tx-3); font-size: var(--fs-sm); }
 .up-log { max-height: 260px; overflow: auto; margin: 0; padding: var(--s-3); background: var(--bg-0); border: 1px solid var(--line-2); font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--tx-2); }
+/* Print page: plugin panels */
+.dash-plug { position: relative; min-height: 120px; }
+.dash-plug .classic-frame { height: 360px; }
+.dash-plug-state { padding: var(--s-4); display: flex; align-items: center; gap: 8px; }

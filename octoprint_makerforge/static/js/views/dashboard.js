@@ -14,11 +14,12 @@ import { mountMacroDeck } from "mf/ui/panels/macrodeck.js";
 import { mountKlipperInfo } from "mf/ui/panels/klipperinfo.js";
 import { mountSystem } from "mf/ui/panels/system.js";
 import { mountUsage } from "mf/ui/panels/usage.js";
+import { mountPluginPanels } from "mf/ui/panels/pluginpanels.js";
 
 const MOUNT = {
   job: mountJob, camera: mountCamera, temps: mountTemps, tune: mountQuickTune,
   toolhead: mountToolhead, console: mountConsole, macros: mountMacroDeck,
-  klipper: mountKlipperInfo, system: mountSystem, usage: mountUsage,
+  klipper: mountKlipperInfo, system: mountSystem, usage: mountUsage, plugins: mountPluginPanels,
 };
 
 // how many columns fit, from the width the grid actually has

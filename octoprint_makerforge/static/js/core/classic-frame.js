@@ -15,6 +15,11 @@ html.mf-embed:not([data-mf-mode="classic"]) .footer { display: none !important; 
 html.mf-embed:not([data-mf-mode="classic"]) .octoprint-container { width: auto !important; max-width: none !important; margin: 0 !important; padding: 16px !important; }
 html.mf-embed:not([data-mf-mode="classic"]) .octoprint-container > .row { margin-left: 0 !important; }
 
+/* OctoPrint's setup wizard belongs to the full classic page, not to one embedded part */
+html.mf-embed:not([data-mf-mode="classic"]) #wizard_dialog { display: none !important; }
+html.mf-embed:not([data-mf-mode="classic"]) body:has(#wizard_dialog.in) .modal-backdrop { display: none !important; }
+html.mf-embed:not([data-mf-mode="classic"]) body:has(#wizard_dialog.in) { overflow: auto !important; }
+
 /* a plugin's tab, on its own */
 html.mf-embed[data-mf-mode="tab"] #sidebar,
 html.mf-embed[data-mf-mode="tab"] #tabs { display: none !important; }
@@ -25,6 +30,13 @@ html.mf-embed[data-mf-mode="tab"] .tab-content { border: 0 !important; padding: 
 html.mf-embed[data-mf-mode="panel"] .octoprint-container .tabbable { display: none !important; }
 html.mf-embed[data-mf-mode="panel"] #sidebar { width: 100% !important; margin-left: 0 !important; float: none !important; }
 html.mf-embed[data-mf-mode="panel"] #sidebar > .accordion-group:not(.mf-show) { display: none !important; }
+
+/* every plugin's sidebar panel, stacked and open (the Print page's Plugins panel) */
+html.mf-embed[data-mf-mode="panels"] .octoprint-container { padding: 0 !important; }
+html.mf-embed[data-mf-mode="panels"] .octoprint-container .tabbable { display: none !important; }
+html.mf-embed[data-mf-mode="panels"] #sidebar { width: 100% !important; margin-left: 0 !important; float: none !important; }
+html.mf-embed[data-mf-mode="panels"] #sidebar > .accordion-group:not([id^="sidebar_plugin_"]) { display: none !important; }
+html.mf-embed[data-mf-mode="panels"] body { background: transparent !important; }
 
 /* settings: the dialog becomes the page */
 html.mf-embed[data-mf-mode="settings"] .octoprint-container { visibility: hidden !important; }
@@ -121,12 +133,21 @@ export function createClassicFrame(host, { timeoutMs = 90000 } = {}) {
       win.$(`#${part.id} .accordion-body`).collapse("show");
     }
     if (part.kind === "settings") openSettings(part.id);
+    if (part.kind === "panels") {
+      for (const g of doc.querySelectorAll("#sidebar > .accordion-group[id^='sidebar_plugin_']")) win.$(g.querySelector(".accordion-body")).collapse("show");
+    }
     win.scrollTo(0, 0);
+  }
+
+  /** Height of what is showing, for a frame that grows with its content. */
+  function contentHeight() {
+    try { return Math.ceil(doc.querySelector("#sidebar")?.getBoundingClientRect().height || doc.body.scrollHeight); } catch { return 0; }
   }
 
   return {
     frame,
     ready,
+    contentHeight,
     parts,
     show,
     destroy() { alive = false; frame.remove(); },
