@@ -28,6 +28,7 @@ from octoprint.access.permissions import Permissions
 from ._version import __version__
 from .notify import Notifier, clean_hook
 from .services import FileMeta
+from .spools import SpoolStore, Spoolman
 from .stats import StatsStore
 from .store import ConfigStore, ConflictError
 
@@ -102,6 +103,7 @@ class MakerForgePlugin(
         self._config = None
         self._meta = None
         self._stats = None
+        self._spools = None
         self._notifier = Notifier(lambda: self._settings.get(["webhooks"]), self._printer_name, None)
         self._import_map_cache = None
         self._log = logging.getLogger("octoprint.plugins.makerforge")
@@ -117,6 +119,7 @@ class MakerForgePlugin(
         self._config = ConfigStore(self.get_plugin_data_folder(), self._log)
         self._meta = FileMeta(self.get_plugin_data_folder(), self._resolve_local, self._log)
         self._stats = StatsStore(self.get_plugin_data_folder(), self._log)
+        self._spools = SpoolStore(self.get_plugin_data_folder(), self._log)
         self._log.info(
             "MakerPrint UI %s ready (default UI: %s)",
             __version__,
@@ -139,11 +142,13 @@ class MakerForgePlugin(
             classic_skin=True,
             # outgoing notifications: [{name, type: json|discord|slack|ntfy, url, events: [...], enabled}]
             webhooks=[],
+            # a Spoolman server (http://host:7912) to track spools in, instead of the built-in list
+            spoolman_url="",
         )
 
     def get_settings_restricted_paths(self):
         # webhook URLs are secrets (they often contain tokens)
-        return dict(admin=[["webhooks"]], never=[])
+        return dict(admin=[["webhooks"], ["spoolman_url"]], never=[])
 
     def on_settings_save(self, data):
         if isinstance(data, dict) and "webhooks" in data:
@@ -462,6 +467,84 @@ class MakerForgePlugin(
         ok, message = self._notifier.test(data)
         return flask.make_response(flask.jsonify(ok=ok, message=message), 200 if ok else 502)
 
+    # ~~ Spools ------------------------------------------------------------------------
+
+    def _spool_store(self):
+        if self._spools is None:
+            self._spools = SpoolStore(self.get_plugin_data_folder(), self._log)
+        return self._spools
+
+    def _spool_mode(self):
+        # the OctoPrint-Spoolman plugin does its own counting; doing it here too would count twice
+        if self._plugin_manager.get_plugin("Spoolman", require_enabled=True):
+            return "plugin"
+        url = (self._settings.get(["spoolman_url"]) or "").strip()
+        if re.match(r"^https?://[^\s/]+", url):
+            return "spoolman"
+        return "local"
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/spools", methods=["GET"])
+    @Permissions.STATUS.require(403)
+    def api_spools(self):
+        mode = self._spool_mode()
+        data = self._spool_store().get()
+        out = {"mode": mode, "spools": [], "active": None, "error": None, "log": data.get("log", [])[-10:]}
+        if mode == "local":
+            out.update(spools=data["spools"], active=data.get("active"))
+        elif mode == "spoolman":
+            try:
+                out["spools"] = Spoolman(self._settings.get(["spoolman_url"])).spools()
+                out["active"] = data.get("spoolmanActive")
+            except Exception as exc:
+                out["error"] = "Couldn't reach Spoolman: {}".format(str(exc)[:160])
+        return flask.jsonify(out)
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/spools", methods=["POST"])
+    @Permissions.CONTROL.require(403)
+    def api_spools_save(self):
+        if self._spool_mode() != "local":
+            return flask.make_response(flask.jsonify(error="Spools are managed in Spoolman."), 409)
+        try:
+            spool = self._spool_store().put(flask.request.get_json(silent=True) or {})
+        except ValueError as exc:
+            return flask.make_response(flask.jsonify(error=str(exc)), 400)
+        return flask.jsonify(spool)
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/spools/<sid>", methods=["DELETE"])
+    @Permissions.CONTROL.require(403)
+    def api_spools_delete(self, sid):
+        self._spool_store().delete("".join(c for c in sid if c.isalnum())[:32])
+        return flask.jsonify(ok=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/spools/active", methods=["POST"])
+    @Permissions.CONTROL.require(403)
+    def api_spools_active(self):
+        sid = str((flask.request.get_json(silent=True) or {}).get("id") or "")
+        sid = "".join(c for c in sid if c.isalnum())[:32] or None
+        try:
+            self._spool_store().set_active(sid, spoolman=self._spool_mode() == "spoolman")
+        except ValueError as exc:
+            return flask.make_response(flask.jsonify(error=str(exc)), 400)
+        self._plugin_manager.send_plugin_message(self._identifier, {"type": "spools"})
+        return flask.jsonify(ok=True, active=sid)
+
+    def _use_filament(self, mm, name):
+        if not mm:
+            return
+        mode = self._spool_mode()
+        try:
+            if mode == "local":
+                spool, grams = self._spool_store().use(mm, name)
+                if spool:
+                    self._log.info("Took %.1f g off spool %s", grams, spool["name"])
+            elif mode == "spoolman":
+                sid = self._spool_store().spoolman_active()
+                if sid:
+                    Spoolman(self._settings.get(["spoolman_url"])).use(sid, mm)
+            self._plugin_manager.send_plugin_message(self._identifier, {"type": "spools"})
+        except Exception:
+            self._log.exception("Couldn't record filament use on the spool")
+
     # ~~ Pause at layer ---------------------------------------------------------------
 
     def _pause_state(self):
@@ -601,6 +684,7 @@ class MakerForgePlugin(
             except Exception:
                 estimated = True
         self._stats_store().record(result, name, payload.get("path"), seconds, mm, estimated)
+        self._use_filament(mm, name)
 
     # ~~ Software update ---------------------------------------------------------------
 

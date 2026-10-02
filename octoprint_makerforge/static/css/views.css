@@ -674,3 +674,11 @@
 .pauseat-note span { flex: 1 1 200px; }
 .pauseat-note b { color: inherit; }
 @media (max-width: 480px) { .job-layer { width: 96px; height: 72px; } }
+
+/* spools */
+.spool-card { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.spool-card b { display: block; font-family: var(--font-display); font-weight: 600; }
+.spool-dot { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 9px rgb(0 0 0 / 0.18), 0 0 0 1px var(--line-3); }
+.spool-left { text-align: right; }
+.spool-left b { font-size: var(--fs-lg); }
+.spool-left span { display: block; font-size: var(--fs-xs); }

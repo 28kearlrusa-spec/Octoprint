@@ -9,6 +9,7 @@ export const PANELS = [
   { id: "temps", name: "Temperatures", note: "Heaters, presets and the history chart", wide: true, h: 400 },
   { id: "toolhead", name: "Toolhead", note: "Position, small moves, homing and levelling", h: 250 },
   { id: "console", name: "Console", note: "The latest printer output and a command line", wide: true, h: 330 },
+  { id: "spool", name: "Spool", note: "The spool on the printer and how much is left", h: 200 },
   { id: "tune", name: "Live tuning", note: "Speed, flow, fans and Z offset during a print", h: 400 },
   { id: "macros", name: "Macros", note: "Every macro as a button", h: 320 },
   { id: "klipper", name: "Klipper", note: "State, last calibration results, restarts", h: 300 },
@@ -18,7 +19,7 @@ export const PANELS = [
 ];
 
 export const DEFAULT_PANELS = {
-  forge: ["job", "camera", "temps", "tune", "plugins"],
+  forge: ["job", "camera", "temps", "tune", "spool", "plugins"],
   studio: PANELS.map((p) => p.id),
 };
 

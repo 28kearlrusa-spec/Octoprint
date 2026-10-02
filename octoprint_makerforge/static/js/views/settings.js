@@ -16,12 +16,14 @@ import { confirmDialog, promptDialog, openDialog } from "mf/ui/dialog.js";
 import { openMacroEditor } from "mf/ui/macros.js";
 import { chime } from "mf/core/events.js";
 import { webcamInfo, bust } from "mf/core/webcam.js";
+import { loadSpools, saveSpool, deleteSpool, setActiveSpool } from "mf/core/spools.js";
 
 const SECTIONS = [
   ["appearance", "Appearance", "palette"],
   ["dashboard", "Print page", "grid"],
   ["printer", "Printer", "cube"],
   ["presets", "Presets", "flame"],
+  ["spools", "Spools", "spool"],
   ["macros", "Macros", "bolt"],
   ["fans", "Fans and lights", "fan"],
   ["camera", "Camera", "camera"],
@@ -290,6 +292,69 @@ const BUILDERS = {
     add.children[0].addEventListener("click", async () => { await config.update((d) => { d.presets.push({ id: uid(5), name: "New", nozzle: 210, bed: 60, chamber: 0 }); }); draw(); });
     add.children[1].addEventListener("click", async () => { if (await confirmDialog({ title: "Reset presets?", confirm: "Reset", danger: true })) { await config.update((d) => { d.presets = clone(DEFAULT_CONFIG.presets); }); draw(); } });
     section(host, "Temperature presets", "the Preheat chips on Print and Control", table, add);
+  },
+
+  spools(host) {
+    const wrap = html`<div class="col gap-4"></div>`;
+    const MATERIALS = ["PLA", "PETG", "ABS", "ASA", "PC", "TPU", "Nylon", "PLA+", "PETG-CF", "ASA-CF", "PA-CF", "HIPS", "PVA"];
+    const DENSITY = { PLA: 1.24, "PLA+": 1.24, PETG: 1.27, "PETG-CF": 1.3, ABS: 1.04, ASA: 1.07, "ASA-CF": 1.12, PC: 1.2, TPU: 1.21, Nylon: 1.14, "PA-CF": 1.2, HIPS: 1.04, PVA: 1.23 };
+    async function draw() {
+      const d = await loadSpools();
+      if (!d) { wrap.replaceChildren(html`<div class="callout is-warn">${raw(icon("alert"))}<div>Couldn't load spools.</div></div>`); return; }
+      if (d.mode === "plugin") { wrap.replaceChildren(html`<div class="callout is-info">${raw(icon("info"))}<div>The OctoPrint Spoolman plugin is installed and tracks your spools, so MakerPrint leaves the counting to it. Its settings are under Plugins.</div></div>`); return; }
+      const rows = d.spools.map((sp) => {
+        const row = html`<div class="hook spool-row">
+          <div class="form-grid">
+            <div class="field"><label>Name</label><input class="input" data-k="name" value="${sp.name}" ${d.mode === "local" ? "" : "disabled"}></div>
+            <div class="field"><label>Material</label><input class="input" data-k="material" value="${sp.material}" list="mf-materials" ${d.mode === "local" ? "" : "disabled"}></div>
+            <div class="field"><label>Colour</label><input class="color-input" type="color" data-k="color" value="${sp.color}" ${d.mode === "local" ? "" : "disabled"}></div>
+            <div class="field"><label>Filament on a full spool (g)</label><input class="input" type="number" data-k="weightG" value="${sp.weightG ?? ""}" ${d.mode === "local" ? "" : "disabled"}></div>
+            <div class="field"><label>Left (g)</label><input class="input" type="number" data-k="remainingG" value="${sp.remainingG != null ? Math.round(sp.remainingG) : ""}" ${d.mode === "local" ? "" : "disabled"}></div>
+            <div class="field"><label>Cost per kg</label><input class="input" type="number" step="0.5" data-k="costPerKg" value="${sp.costPerKg != null ? Number(sp.costPerKg).toFixed(2) : ""}" ${d.mode === "local" ? "" : "disabled"}></div>
+          </div>
+          <div class="row wrap">
+            <label class="check grow"><input type="radio" name="spool-active" ${String(sp.id) === String(d.active) ? "checked" : ""}> Loaded on the printer</label>
+            ${d.mode === "local" ? html`<button class="btn btn-sm btn-ghost" data-a="del">${raw(icon("trash", "i i-sm"))}Remove</button>` : ""}
+          </div></div>`;
+        const save = debounce(async () => {
+          const o = { ...sp };
+          row.querySelectorAll("[data-k]").forEach((i) => { o[i.dataset.k] = i.value; });
+          o.density = DENSITY[o.material] ?? sp.density;
+          try { await saveSpool(o); toast.ok("Spool saved", "", { timeout: 1200 }); } catch (e) { toast.fail("Couldn't save the spool", e); }
+        }, 600);
+        if (d.mode === "local") row.addEventListener("input", (e) => { if (e.target.dataset.k) save(); });
+        row.querySelector("input[type=radio]").addEventListener("change", async () => { try { await setActiveSpool(sp.id); } catch (e) { toast.fail("Couldn't change the spool", e); } });
+        row.querySelector("[data-a=del]")?.addEventListener("click", async () => {
+          if (await confirmDialog({ title: `Remove ${sp.name}?`, confirm: "Remove", danger: true })) { await deleteSpool(sp.id); draw(); }
+        });
+        return row;
+      });
+      const list = html`<datalist id="mf-materials">${MATERIALS.map((m) => html`<option value="${m}"></option>`)}</datalist>`;
+      const add = html`<div class="row"><button class="btn">${raw(icon("plus"))}Add a spool</button></div>`;
+      add.querySelector("button").addEventListener("click", async () => { await saveSpool({ name: "New spool", material: "PLA", color: "#888888", weightG: 1000 }); draw(); });
+      wrap.replaceChildren(
+        d.error ? html`<div class="callout is-warn">${raw(icon("alert"))}<div>${d.error}</div></div>` : "",
+        list,
+        ...(rows.length ? rows : [html`<p class="muted">${d.mode === "spoolman" ? "Spoolman has no spools yet." : "No spools yet."}</p>`]),
+        d.mode === "local" ? add : html`<p class="hint">These come from Spoolman. Edit them there.</p>`,
+      );
+    }
+    section(host, "Spools", "the filament each print uses comes off the loaded spool", wrap);
+    draw();
+
+    if (can("settings")) {
+      const s0 = store.get("settings")?.plugins?.makerforge || {};
+      const url = input("url", s0.spoolman_url || "", { placeholder: "http://spoolman.local:7912" });
+      const btns = html`<div class="row"><button class="btn btn-sm">Save</button><span class="hint">Leave empty to use the list above.</span></div>`;
+      btns.querySelector("button").addEventListener("click", async () => {
+        try {
+          await octo.saveSettings({ plugins: { makerforge: { spoolman_url: url.value.trim() } } });
+          store.set("settings", await octo.settings());
+          toast.ok("Saved"); draw();
+        } catch (e) { toast.fail("Couldn't save", e); }
+      });
+      section(host, "Spoolman", "optional", labelled("Spoolman server address", url, "If you run Spoolman, MakerPrint lists its spools and reports each print's filament to it."), btns);
+    }
   },
 
   macros(host) {

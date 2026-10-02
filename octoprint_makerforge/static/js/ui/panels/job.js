@@ -17,6 +17,7 @@ import { openConnect } from "mf/ui/connect.js";
 import { createLayerView } from "mf/ui/panels/layerview.js";
 import { get, post, PLUGIN } from "mf/core/api.js";
 import { hasCommand } from "mf/core/klipper-watch.js";
+import { loadSpools, setActiveSpool } from "mf/core/spools.js";
 
 const thumbBox = (path, mtime, big = false) => path
   ? `<span class="thumb ${big ? "is-lg" : ""}" data-thumb>${icon("cube")}<img alt="" loading="lazy" src="${esc(mf.thumbUrl(path, mtime))}"></span>`
@@ -33,7 +34,13 @@ export function watchThumbs(root) {
 /** "Bed clear? Filament loaded?" checklist before a print starts. Resolves true to go ahead. */
 export async function preflight(path, metaInfo) {
   const pf = config.data.preflight || {};
-  if (pf.enabled === false || !pf.items?.length) return true;
+  const sp = await loadSpools().catch(() => null);
+  const spools = sp && (sp.mode === "local" || sp.mode === "spoolman") ? sp.spools : [];
+  if ((pf.enabled === false || !pf.items?.length) && !spools.length) return true;
+  const want = (metaInfo?.info?.filamentType || "").toUpperCase();
+  const spoolField = spools.length ? html`<div class="field"><label for="pf-spool">Spool</label>
+    <select class="select" id="pf-spool"><option value="">None</option>${spools.map((x) => html`<option value="${x.id}" ${String(x.id) === String(sp.active) ? "selected" : ""}>${x.name}${x.material ? ` (${x.material})` : ""}${x.remainingG != null ? `, ${Math.round(x.remainingG)} g left` : ""}</option>`)}</select>
+    <div class="hint" data-ref="spoolWarn"></div></div>` : "";
   const body = html`
     <div class="col gap-4">
       <div class="row gap-4">
@@ -48,8 +55,9 @@ export async function preflight(path, metaInfo) {
           </div>
         </div>
       </div>
+      ${spoolField}
       <div class="col gap-3" data-ref="list">
-        ${pf.items.map((t, i) => html`<label class="check"><input type="checkbox" data-i="${i}"> ${t}</label>`)}
+        ${pf.enabled === false ? "" : (pf.items || []).map((t, i) => html`<label class="check"><input type="checkbox" data-i="${i}"> ${t}</label>`)}
       </div>
     </div>`;
   const boxes = () => Array.from(body.querySelectorAll("input[type=checkbox]"));
@@ -62,10 +70,23 @@ export async function preflight(path, metaInfo) {
     ],
   });
   const go = dlg.el.querySelector(".dialog-foot .btn-primary");
-  const sync = () => { go.disabled = !boxes().every((b) => b.checked); };
+  const pick = body.querySelector("#pf-spool");
+  const warn = () => {
+    const w = body.querySelector("[data-ref=spoolWarn]");
+    if (!w || !pick) return;
+    const chosen = spools.find((x) => String(x.id) === pick.value);
+    const short = chosen && metaInfo?.info?.filamentGrams && chosen.remainingG != null && chosen.remainingG < metaInfo.info.filamentGrams;
+    const wrongType = chosen && want && chosen.material && !chosen.material.toUpperCase().startsWith(want.split(/[-+ ]/)[0]);
+    w.textContent = [wrongType ? `This file was sliced for ${metaInfo.info.filamentType}, and this spool is ${chosen.material}.` : "",
+      short ? `It needs about ${Math.round(metaInfo.info.filamentGrams)} g and the spool has ${Math.round(chosen.remainingG)} g left.` : ""].filter(Boolean).join(" ");
+    w.className = w.textContent ? "hint warn" : "hint";
+  };
+  const sync = () => { go.disabled = !boxes().every((b) => b.checked); warn(); };
   body.addEventListener("change", sync);
   sync();
-  return (await dlg.closed) === true;
+  const ok = (await dlg.closed) === true;
+  if (ok && pick && pick.value !== String(sp.active ?? "")) await setActiveSpool(pick.value || null).catch(() => {});
+  return ok;
 }
 
 export async function startWithChecks(path) {

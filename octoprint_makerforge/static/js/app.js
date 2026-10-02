@@ -18,6 +18,7 @@ import * as position from "mf/core/position.js";
 import { initDropzone } from "mf/ui/uploads.js";
 import { prefs } from "mf/core/prefs.js";
 import { setClock } from "mf/core/format.js";
+import { initSpools } from "mf/core/spools.js";
 
 const appRoot = document.getElementById("app");
 const bootEl = document.getElementById("boot");
@@ -75,6 +76,7 @@ function wireOnce() {
   initPrompts();
   jobinfo.init();
   position.init();
+  initSpools();
   bus.on("event:Connected", refreshProfile);
   bus.on("event:PrinterProfileModified", refreshProfile);
 }
