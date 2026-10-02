@@ -365,3 +365,5 @@ html[data-look="studio"] .vw-bottom { background: rgb(255 255 255 / 0.94); borde
 /* plugins frame */
 html[data-look="studio"] .classic-frame { background: #ffffff; }
 html[data-look="studio"] .plug-frame-panel { overflow: hidden; }
+html[data-look="studio"] .job-layer { border-radius: 6px; background: var(--bg-3); }
+html[data-look="studio"] .pauseat-note { border-radius: 6px; }

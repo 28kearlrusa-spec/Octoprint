@@ -665,3 +665,12 @@
 .dash-plug .classic-frame { height: 0; }
 .dash-plug .classic-frame.is-ready { height: auto; }
 .dash-plug-state { min-height: 96px; padding: var(--s-4); display: flex; align-items: center; gap: 8px; }
+
+/* job: live layer and pause-at-layer */
+.job-live { display: flex; align-items: flex-end; gap: var(--s-4); }
+.job-live-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.job-layer { flex: 0 0 auto; width: 132px; height: 96px; border: 1px solid var(--line-2); background: var(--bg-1); }
+.pauseat-note { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; padding: var(--s-2) var(--s-3); border: 1px solid rgb(var(--warn-rgb) / 0.4); background: var(--warn-soft); color: var(--warn); font-size: var(--fs-sm); }
+.pauseat-note span { flex: 1 1 200px; }
+.pauseat-note b { color: inherit; }
+@media (max-width: 480px) { .job-layer { width: 96px; height: 72px; } }

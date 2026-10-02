@@ -45,6 +45,8 @@ html.mf-embed[data-mf-mode="settings"] #settings_dialog .modal-body { max-height
 html.mf-embed[data-mf-mode="settings"] #settings_dialog .modal-header .close,
 html.mf-embed[data-mf-mode="settings"] #settings_dialog .modal-footer [data-dismiss="modal"] { display: none !important; }
 html.mf-embed[data-mf-mode="settings"] .modal-backdrop { opacity: 1 !important; }
+/* Plugin Manager's list is a fixed 234px box in the dialog; here the dialog is the page */
+html.mf-embed[data-mf-mode="settings"] #settings_plugin_pluginmanager_pluginlist { height: calc(100vh - 330px) !important; min-height: 240px; max-height: none !important; }
 /* one plugin's settings: MakerPrint lists them, so the dialog's own menu would repeat it */
 html.mf-embed[data-mf-mode="settings"]:not([data-mf-full]) #settings_dialog_menu { display: none !important; }
 html.mf-embed[data-mf-mode="settings"]:not([data-mf-full]) #settings_dialog_content { width: 100% !important; margin-left: 0 !important; }

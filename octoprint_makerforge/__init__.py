@@ -18,6 +18,7 @@ import hashlib
 import logging
 import os
 import re
+import threading
 import time
 
 import flask
@@ -104,6 +105,11 @@ class MakerForgePlugin(
         self._notifier = Notifier(lambda: self._settings.get(["webhooks"]), self._printer_name, None)
         self._import_map_cache = None
         self._log = logging.getLogger("octoprint.plugins.makerforge")
+        # "pause at layer": {path, layer, filepos, action}, watched on the server so it fires
+        # with every browser closed
+        self._pause_at = None
+        self._pause_lock = threading.Lock()
+        self._pause_thread = None
 
     # ~~ Startup ------------------------------------------------------------------------
 
@@ -455,6 +461,101 @@ class MakerForgePlugin(
         data = flask.request.get_json(silent=True) or {}
         ok, message = self._notifier.test(data)
         return flask.make_response(flask.jsonify(ok=ok, message=message), 200 if ok else 502)
+
+    # ~~ Pause at layer ---------------------------------------------------------------
+
+    def _pause_state(self):
+        pa = self._pause_at
+        return {"armed": bool(pa), "layer": pa["layer"] if pa else None, "action": pa["action"] if pa else None,
+                "path": pa["path"] if pa else None}
+
+    def _pause_announce(self, fired=False):
+        try:
+            self._plugin_manager.send_plugin_message(self._identifier, dict(self._pause_state(), type="pauseat", fired=fired))
+        except Exception:
+            pass
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/pauseat", methods=["GET"])
+    @Permissions.STATUS.require(403)
+    def api_pauseat_get(self):
+        return flask.jsonify(self._pause_state())
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/pauseat", methods=["POST"])
+    @Permissions.PRINT.require(403)
+    def api_pauseat_set(self):
+        data = flask.request.get_json(silent=True) or {}
+        if data.get("layer") in (None, "", 0, False):
+            with self._pause_lock:
+                self._pause_at = None
+            self._pause_announce()
+            return flask.jsonify(self._pause_state())
+        try:
+            layer = int(data.get("layer"))
+        except (TypeError, ValueError):
+            return flask.make_response(flask.jsonify(error="The layer has to be a number."), 400)
+        action = "m600" if data.get("action") == "m600" else "pause"
+        current = self._printer.get_current_data() or {}
+        job = (current.get("job") or {}).get("file") or {}
+        if not (self._printer.is_printing() or self._printer.is_paused()) or job.get("origin") != "local" or not job.get("path"):
+            return flask.make_response(flask.jsonify(error="Pause at layer works while printing a file from OctoPrint's storage."), 409)
+        try:
+            status, scan = self._meta_service().layers(job["path"], start=True)
+        except (ValueError, IOError, OSError) as exc:
+            return self._file_error(exc)
+        layers = (scan or {}).get("layers") or []
+        if status != "ready" or not layers:
+            return flask.make_response(flask.jsonify(error="The layer map for this file isn't ready yet. Try again in a moment."), 409)
+        if layer < 2 or layer > len(layers):
+            return flask.make_response(flask.jsonify(error="Pick a layer between 2 and {}.".format(len(layers))), 400)
+        filepos = int(layers[layer - 1][1])
+        pos = (current.get("progress") or {}).get("filepos") or 0
+        if pos >= filepos:
+            return flask.make_response(flask.jsonify(error="The print is already past layer {}.".format(layer)), 409)
+        with self._pause_lock:
+            self._pause_at = {"path": job["path"], "layer": layer, "filepos": filepos, "action": action}
+            if not (self._pause_thread and self._pause_thread.is_alive()):
+                self._pause_thread = threading.Thread(target=self._pause_watch, name="makerforge-pauseat")
+                self._pause_thread.daemon = True
+                self._pause_thread.start()
+        self._log.info("Pause armed at layer %s (byte %s, %s)", layer, filepos, action)
+        self._pause_announce()
+        return flask.jsonify(self._pause_state())
+
+    def _pause_watch(self):
+        # OctoPrint's file position is how far it has read the file, a few lines ahead of the
+        # nozzle, so this stops right as the chosen layer begins
+        while True:
+            time.sleep(0.4)
+            with self._pause_lock:
+                pa = self._pause_at
+                if not pa:
+                    return
+                try:
+                    current = self._printer.get_current_data() or {}
+                    job = (current.get("job") or {}).get("file") or {}
+                    if not self._printer.is_printing() and not self._printer.is_paused():
+                        self._pause_at = None
+                        fired = None
+                    elif job.get("path") != pa["path"]:
+                        self._pause_at = None
+                        fired = None
+                    elif self._printer.is_printing() and ((current.get("progress") or {}).get("filepos") or 0) >= pa["filepos"]:
+                        self._pause_at = None
+                        fired = pa
+                    else:
+                        continue
+                except Exception:
+                    self._log.exception("pause-at-layer watch failed")
+                    self._pause_at = None
+                    fired = None
+            if fired:
+                self._log.info("Pausing at layer %s", fired["layer"])
+                if fired["action"] == "m600":
+                    self._printer.commands("M600")
+                else:
+                    self._printer.pause_print()
+            self._pause_announce(fired=bool(fired))
+            return
 
     # ~~ Events ---------------------------------------------------------------------
 

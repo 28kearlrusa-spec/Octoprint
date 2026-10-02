@@ -14,6 +14,9 @@ import * as actions from "mf/core/actions.js";
 import * as router from "mf/core/router.js";
 import { toast } from "mf/ui/toast.js";
 import { openConnect } from "mf/ui/connect.js";
+import { createLayerView } from "mf/ui/panels/layerview.js";
+import { get, post, PLUGIN } from "mf/core/api.js";
+import { hasCommand } from "mf/core/klipper-watch.js";
 
 const thumbBox = (path, mtime, big = false) => path
   ? `<span class="thumb ${big ? "is-lg" : ""}" data-thumb>${icon("cube")}<img alt="" loading="lazy" src="${esc(mf.thumbUrl(path, mtime))}"></span>`
@@ -128,16 +131,21 @@ export function mountJob(host) {
     const head = (big) => `<div class="job-top">${thumbBox(file.path, ji?.meta?.mtime, big)}<div class="grow" style="min-width:0"><div class="job-name">${esc(name)}</div><div data-v="meta"></div></div></div>`;
     if (mode === "active") {
       return `${head(false)}
-        <div>
-          <div class="job-pct"><span class="num tnum" data-v="pct"></span></div>
-          <div class="job-bar" data-bar role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></div>
+        <div class="job-live">
+          <div class="job-live-main">
+            <div class="job-pct"><span class="num tnum" data-v="pct"></span></div>
+            <div class="job-bar" data-bar role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></div>
+          </div>
+          <canvas class="job-layer" data-layercv role="img" aria-label="The current layer, seen from above" hidden></canvas>
         </div>
         ${statsHtml([["Elapsed", "elapsed"], ["Remaining", "left"], ["Finishes", "eta"], ["Layer", "layer"], ["Height", "height"], ["Filament", "filament"]])}
         <div class="hint" data-v="hint"></div>
+        <div data-v="pauseat"></div>
         <div class="job-actions">
           ${f.paused || f.pausing
             ? `<button class="btn btn-primary" data-act="resume">${icon("play")}Resume</button>`
             : `<button class="btn" data-act="pause" ${f.cancelling ? "disabled" : ""}>${icon("pause")}Pause</button>`}
+          <button class="btn" data-act="pauseat" ${f.cancelling || file.origin !== "local" || !can("print") ? "disabled" : ""} data-tip="Pause automatically when a chosen layer starts, for a colour change or inserts">${icon("layers")}Pause at layer</button>
           <button class="btn btn-danger" data-act="cancel" data-tip="Hold to cancel this print" ${f.cancelling ? "disabled" : ""}>${icon("stop")}<span>Hold to cancel</span></button>
         </div>`;
     }
@@ -170,6 +178,65 @@ export function mountJob(host) {
   }
 
   let currentSig = null;
+  let layerView = null;
+  let pauseAt = null;
+
+  // "Slicer said 2h 10m; at this pace it takes 2h 25m, 15 min longer."
+  function etaText(s, info, left, origin, usedG) {
+    const parts = [];
+    const slicer = info.estimatedSeconds ?? s.job?.estimatedPrintTime;
+    const elapsed = s.progress?.printTime;
+    if (slicer && left != null && elapsed != null && elapsed > 120) {
+      const total = elapsed + left, diff = total - slicer;
+      const off = Math.abs(diff) < 120 ? "right on the slicer's estimate" : `${duration(Math.abs(diff))} ${diff > 0 ? "longer" : "shorter"} than the slicer's ${duration(slicer)}`;
+      parts.push(`At this pace the whole print takes ${duration(total)}, ${off}.`);
+    } else if (origin && left != null) parts.push(`Time left comes from ${origin}.`);
+    if (usedG != null) parts.push(`About ${grams(usedG)} of filament used so far.`);
+    return parts.join(" ");
+  }
+
+  async function loadPauseAt() {
+    try { pauseAt = await get(`${PLUGIN}/api/pauseat`); } catch { pauseAt = null; }
+    render();
+  }
+  const offPause = bus.on("plugin:makerforge", (m) => {
+    if (m?.type !== "pauseat") return;
+    pauseAt = m;
+    if (m.fired) toast.info(`Paused at layer ${m.layer}`, "Resume when you're ready.", { timeout: 0 });
+    render();
+  });
+
+  async function askPauseAt() {
+    const s = store.state;
+    const ji = s.jobinfo;
+    const at = layerAt(ji?.layers, s.progress?.filepos);
+    const total = at?.total || ji?.layers?.count;
+    if (!total) { toast.info("Not ready yet", "The layer map for this file is still being built. Try again in a moment."); return; }
+    const m600 = store.get("klipper.detected") === false || hasCommand("M600") === true;
+    const body = html`<form class="col gap-3">
+      <div class="field"><label for="pa-layer">Pause when this layer starts</label>
+        <div class="numfield"><input id="pa-layer" type="number" min="${(at?.number || 1) + 1}" max="${total}" value="${Math.min(total, (at?.number || 1) + 1)}" required><span class="unit">of ${total}</span></div>
+        <div class="hint">Now on layer ${at?.number ?? "–"}. The printer's computer watches for it, so it works with this page closed.</div></div>
+      ${m600 ? html`<label class="check"><input type="checkbox" data-ref="m600"> Filament change (M600) instead of a normal pause</label>` : ""}
+    </form>`;
+    const dlg = openDialog({
+      title: "Pause at layer",
+      body,
+      buttons: [
+        { label: "Cancel", kind: "ghost", value: null },
+        { label: "Set pause", kind: "primary", icon: "pause", onClick: async () => {
+          const layer = Number(body.querySelector("#pa-layer").value);
+          try {
+            pauseAt = await post(`${PLUGIN}/api/pauseat`, { layer, action: body.querySelector("[data-ref=m600]")?.checked ? "m600" : "pause" });
+            dlg.close(true);
+            render();
+          } catch (e) { toast.fail("Couldn't set that", e); }
+          return false;
+        } },
+      ],
+    });
+    body.addEventListener("submit", (e) => { e.preventDefault(); dlg.el.querySelector(".dialog-foot .btn-primary").click(); });
+  }
 
   function render() {
     const s = store.state;
@@ -221,7 +288,14 @@ export function mountJob(host) {
       setV("layer", at ? `${at.number}<small> / ${at.total}</small>` : DASH);
       setV("height", s.currentZ != null ? `${Number(s.currentZ).toFixed(2)}<small>${zMax ? ` / ${zMax.toFixed(1)} mm` : " mm"}</small>` : DASH);
       setV("filament", used != null ? `${filamentLength(used)}${totalMm ? `<small> / ${filamentLength(totalMm)}</small>` : ""}` : totalMm ? filamentLength(totalMm) : DASH);
-      setV("hint", origin && left != null ? `Time left comes from ${origin}.${usedG != null ? ` About ${grams(usedG)} of filament used so far.` : ""}` : "");
+      setV("hint", etaText(s, info, left, origin, usedG));
+      setV("pauseat", pauseAt?.armed && pauseAt.path === file.path
+        ? `<div class="pauseat-note">${icon("pause", "i i-sm")}<span>Pausing ${pauseAt.action === "m600" ? "for a filament change (M600)" : ""} when layer <b>${pauseAt.layer}</b> starts${at ? `, ${Math.max(0, pauseAt.layer - at.number)} layers from now` : ""}.</span><button class="btn btn-sm btn-ghost" data-act="pauseat-off">Don't pause</button></div>` : "");
+      const cv = r.body.querySelector("[data-layercv]");
+      if (cv && !prefs.get("reduceHeavy")) {
+        if (!layerView || layerView.canvas !== cv) { layerView?.view.destroy(); layerView = { canvas: cv, view: createLayerView(cv) }; }
+        cv.hidden = !layerView.view.update({ path: file.path, layers: ji?.layers, filepos: s.progress?.filepos, size: file.size });
+      }
     } else if (mode === "ready") {
       const est = info.estimatedSeconds ?? s.job?.estimatedPrintTime;
       const mm = info.filamentMm ?? s.job?.filament?.tool0?.length;
@@ -237,6 +311,7 @@ export function mountJob(host) {
   function wire() {
     const q = (a) => r.body.querySelector(`[data-act="${a}"]`);
     q("pause")?.addEventListener("click", () => actions.pausePrint());
+    q("pauseat")?.addEventListener("click", askPauseAt);
     q("resume")?.addEventListener("click", () => actions.resumePrint());
     const cancel = q("cancel");
     if (cancel) holdToConfirm(cancel, () => actions.cancelPrint(), Number(prefs.get("holdMs")) || 1000);
@@ -253,6 +328,11 @@ export function mountJob(host) {
       try { await actions.selectFile(b.dataset.recent); } catch { /* toast shown */ }
     }));
   }
+
+  r.body.addEventListener("click", async (e) => {
+    if (!e.target.closest('[data-act="pauseat-off"]')) return;
+    try { pauseAt = await post(`${PLUGIN}/api/pauseat`, { layer: null }); render(); } catch (err) { toast.fail("Couldn't change that", err); }
+  });
 
   r.preview.addEventListener("click", async () => {
     const path = store.get("job.file.path");
@@ -271,5 +351,6 @@ export function mountJob(host) {
   const offs = ["printer", "job", "progress", "jobinfo", "currentZ", "config", "net", "klipper"].map((k) => store.on(k, render));
   render();
   loadRecent();
-  return { dispose() { offs.forEach((o) => o()); offFiles(); el.remove(); } };
+  loadPauseAt();
+  return { dispose() { offs.forEach((o) => o()); offFiles(); offPause(); layerView?.view.destroy(); el.remove(); } };
 }
