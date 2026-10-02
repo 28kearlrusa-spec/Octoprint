@@ -1,7 +1,6 @@
 // Where is the toolhead? OctoPrint parses M114 replies and announces them as PositionUpdate
 // events; we ask for one when the printer is idle and after moves we caused ourselves.
 import { store, bus } from "mf/core/store.js";
-import { term } from "mf/core/telemetry.js";
 import { gcode } from "mf/core/actions.js";
 import { isIdle } from "mf/core/status.js";
 
@@ -17,11 +16,10 @@ export function init() {
   bus.on("event:Connected", () => store.set("position", null));
 }
 
-/** Ask the printer where it is. Skipped while printing (M114 would add serial chatter). */
+/** Ask the printer where it is. Skipped while printing unless forced (it adds serial chatter).
+ *  The query and its reply stay out of the terminal (see POSITION_POLL in telemetry.js). */
 export function refresh({ force = false } = {}) {
   if (!force && !isIdle()) return Promise.resolve(null);
-  term.silent = true;
-  setTimeout(() => { term.silent = false; }, 900);
   return gcode("M114", { quiet: true }).catch(() => null);
 }
 

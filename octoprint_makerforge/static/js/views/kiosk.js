@@ -3,7 +3,7 @@ import { html, raw, refs } from "mf/core/dom.js";
 import { store } from "mf/core/store.js";
 import { icon } from "mf/ui/icons.js";
 import { machineStatus, progressFrac, timeLeft, heater } from "mf/core/status.js";
-import { duration, finishTime, DASH } from "mf/core/format.js";
+import { duration, finishTime, timeOfDay, DASH } from "mf/core/format.js";
 import { layerAt } from "mf/core/jobinfo.js";
 import * as actions from "mf/core/actions.js";
 import * as router from "mf/core/router.js";
@@ -64,7 +64,7 @@ export default {
       r.state.textContent = st.label;
       r.root.querySelector(".k-state .dot").className = `dot ${st.tone === "ok" ? "is-ok" : st.tone === "err" ? "is-err is-pulse" : st.tone === "warn" ? "is-warn" : st.tone === "busy" ? "is-on is-pulse" : ""}`;
       r.name.textContent = (s.job?.file?.display || s.job?.file?.name || (config.data.printerName || s.profile?.name || "")).replace(/\.(gcode|gco|g)$/i, "");
-      const clock = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      const clock = timeOfDay(new Date());
       // busy: the percentage. Idle: a big clock, because a wall display should still be useful.
       r.pct.innerHTML = active && frac != null ? `${Math.floor(frac * 100)}<small>%</small>` : st.key === "offline" || st.key === "unreachable" ? `<span style="font-size:.4em;color:var(--tx-3)">${st.label}</span>` : `<span style="font-size:.62em">${clock}</span>`;
       r.root.classList.toggle("is-idle", !active);
@@ -82,7 +82,7 @@ export default {
           const pause = html`<button class="btn">${raw(icon(f.paused || f.pausing ? "play" : "pause"))}${f.paused || f.pausing ? "Resume" : "Pause"}</button>`;
           pause.addEventListener("click", () => (f.paused || f.pausing ? actions.resumePrint() : actions.pausePrint()));
           const cancel = html`<button class="btn btn-danger">${raw(icon("stop"))}Hold to cancel</button>`;
-          holdToConfirm(cancel, () => actions.cancelPrint(), 1400);
+          holdToConfirm(cancel, () => actions.cancelPrint(), Math.max(1400, Number(prefs.get("holdMs")) || 0));
           r.actions.append(pause, cancel);
         } else if (f.operational) {
           for (const p of config.data.presets.slice(0, 4)) {
@@ -107,7 +107,7 @@ export default {
     const offs = ["printer", "temps", "progress", "job", "jobinfo", "config", "net", "klipper"].map((k) => store.on(k, render));
     render();
 
-    const clockTick = () => { r.clock.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); render(); };
+    const clockTick = () => { r.clock.textContent = timeOfDay(new Date()); render(); };
     clockTick();
     const clock = setInterval(clockTick, 15000);
     r.exit.addEventListener("click", () => router.go("print"));

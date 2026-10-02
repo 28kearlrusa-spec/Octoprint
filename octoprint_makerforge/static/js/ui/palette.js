@@ -4,7 +4,7 @@ import { store } from "mf/core/store.js";
 import { icon } from "mf/ui/icons.js";
 import { octo, boot } from "mf/core/api.js";
 import { config } from "mf/core/config.js";
-import { prefs, THEMES } from "mf/core/prefs.js";
+import { prefs, THEMES, LOOKS } from "mf/core/prefs.js";
 import * as router from "mf/core/router.js";
 import * as actions from "mf/core/actions.js";
 import { availability, runMacro, macroIcon } from "mf/ui/macros.js";
@@ -61,8 +61,12 @@ async function build() {
     const a = availability(m);
     add(`Macros: ${m.cat || "Other"}`, m.name, "bolt", () => runMacro(m), { ic: null, rawIcon: macroIcon(m), disabled: !a.ok, hint: a.ok ? m.gcode.split("\n")[0] : a.reason, key: `${m.name} ${m.gcode}` });
   }
-  for (const t of THEMES) add("Theme", `${t.name} theme`, "palette", () => prefs.set("theme", t.id));
+  for (const l of LOOKS) add("Look", `${l.name} look`, "palette", () => prefs.set("look", l.id));
+  for (const t of THEMES) add("Theme", `${t.name} colours`, "palette", () => { prefs.set("look", "forge"); prefs.set("theme", t.id); });
   add("Plugins", "Plugin Manager", "plugin", () => router.go("plugins", ["settings", "settings_plugin_pluginmanager"]));
+  add("Settings", "Check for updates", "download", () => router.go("settings", ["updates"]));
+  add("Settings", "OctoPrint settings", "cpu", () => router.go("settings", ["octoprint"]));
+  add("Settings", "Choose the Print page panels", "grid", () => router.go("settings", ["dashboard"]));
   add("Account", "Open the classic OctoPrint UI", "external", () => { document.cookie = "mf_ui=classic; path=/; max-age=31536000; SameSite=Lax"; location.href = boot.classicUrl; });
   if (s.auth.loggedIn) add("Account", "Sign out", "logout", () => signOut());
 

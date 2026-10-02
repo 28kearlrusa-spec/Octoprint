@@ -26,6 +26,10 @@ Works with OctoPrint 1.9 and newer (developed against 1.11) on Python 3.7+. Ther
 
 **Plugins**: OctoPrint's Plugin Manager, plus every installed plugin's own tabs, sidebar panels and settings pages. They run in OctoPrint's classic page inside MakerPrint, so they work exactly as they do in the classic interface.
 
+**Two looks** (Settings > Appearance): *MakerPrint*, dark graphite with the logo colours and the essentials on the Print page, and *Studio*, a light black-white-and-grey workspace with a top navigation bar and every panel on the Print page: toolhead position and moves, a console, all macros, Klipper state and last calibration results, the host computer (storage, Pi power, restart and shutdown) and usage. **Settings > Print page** picks the panels and their order for each look.
+
+**Updates** (Settings > Updates) always checks fresh and installs updates for this plugin, OctoPrint and other plugins, with the log shown as it runs. **Settings > OctoPrint settings** opens OctoPrint's full settings dialog without leaving MakerPrint.
+
 Also: timelapses, four colour themes, a command palette (`Ctrl/Cmd+K`), a kiosk mode for a screen at the printer, and push notifications (ntfy, Discord, Slack or any URL) sent by the printer itself, so they arrive with every browser closed.
 
 **Macro prompts**: when a Klipper macro asks a question it appears as a dialog on every open screen. It uses Mainsail's `action:prompt_*` format, so macros written for Mainsail work unchanged. Marlin-style `M876` prompts and `action:notification` messages are shown too.

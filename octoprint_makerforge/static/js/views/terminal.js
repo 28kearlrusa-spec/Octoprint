@@ -155,6 +155,7 @@ export default {
       // M112 kills the printer; ask first when typed by hand
       if (/^\s*M112\b/i.test(text) && !(await confirmDialog({ title: "Emergency stop?", text: "M112 halts the printer immediately. You'll need a firmware restart afterwards.", confirm: "Send M112", danger: true }))) return;
       try {
+        if (/\bM114\b/i.test(text)) term.unhide();
         await actions.gcode(text);
         if (history[history.length - 1] !== text) { history.push(text); saveHistory(history); }
         hIdx = history.length;

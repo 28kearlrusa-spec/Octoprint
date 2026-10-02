@@ -141,6 +141,7 @@
   --edge: transparent;
   --ink: var(--tx-2);
 }
+.btn-ghost:disabled { --fill: transparent; --edge: transparent; }
 .btn-ghost:hover:not(:disabled) { --fill: var(--bg-4); --edge: var(--line-2); --ink: var(--tx-1); }
 
 .btn-danger {

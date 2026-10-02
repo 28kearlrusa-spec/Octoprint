@@ -9,6 +9,7 @@ import { progressFrac, timeLeft } from "mf/core/status.js";
 import { duration, finishTime, filamentLength, filamentGrams, grams, stripExt, relative, DASH } from "mf/core/format.js";
 import { layerAt, filamentAt } from "mf/core/jobinfo.js";
 import { confirmDialog, holdToConfirm, openDialog } from "mf/ui/dialog.js";
+import { prefs } from "mf/core/prefs.js";
 import * as actions from "mf/core/actions.js";
 import * as router from "mf/core/router.js";
 import { toast } from "mf/ui/toast.js";
@@ -238,7 +239,7 @@ export function mountJob(host) {
     q("pause")?.addEventListener("click", () => actions.pausePrint());
     q("resume")?.addEventListener("click", () => actions.resumePrint());
     const cancel = q("cancel");
-    if (cancel) holdToConfirm(cancel, () => actions.cancelPrint(), 1000);
+    if (cancel) holdToConfirm(cancel, () => actions.cancelPrint(), Number(prefs.get("holdMs")) || 1000);
     q("start")?.addEventListener("click", () => startWithChecks(store.get("job.file.path")));
     q("again")?.addEventListener("click", () => startWithChecks(store.get("job.file.path")));
     q("cool")?.addEventListener("click", () => actions.cooldown());

@@ -5,7 +5,7 @@ import { boot } from "mf/core/api.js";
 import { icon } from "mf/ui/icons.js";
 import { machineStatus, progressFrac, timeLeft } from "mf/core/status.js";
 import * as router from "mf/core/router.js";
-import { prefs, THEMES } from "mf/core/prefs.js";
+import { prefs, THEMES, LOOKS } from "mf/core/prefs.js";
 import { openMenu } from "mf/ui/menu.js";
 import { holdToConfirm } from "mf/ui/dialog.js";
 import * as actions from "mf/core/actions.js";
@@ -209,10 +209,12 @@ function connectionMenu(anchor) {
 export function userMenu(anchor) {
   const a = store.get("auth");
   const cur = prefs.get("theme");
+  const studio = prefs.get("look") === "studio";
   openMenu(anchor, [
     { header: a.loggedIn ? `Signed in as ${a.name}` : "Guest" },
-    { header: "Theme" },
-    ...THEMES.map((t) => ({ label: t.name, checked: cur === t.id, onClick: () => prefs.set("theme", t.id) })),
+    { header: "Look" },
+    ...LOOKS.map((l) => ({ label: l.name, checked: prefs.get("look") === l.id, onClick: () => prefs.set("look", l.id) })),
+    ...(studio ? [] : [{ header: "Colours" }, ...THEMES.map((t) => ({ label: t.name, checked: cur === t.id, onClick: () => prefs.set("theme", t.id) }))]),
     { sep: true },
     { label: "Settings", icon: "settings", onClick: () => router.go("settings") },
     { label: "Classic OctoPrint UI", icon: "external", onClick: () => {

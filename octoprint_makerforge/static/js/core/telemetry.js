@@ -65,18 +65,28 @@ export function classify(raw) {
   return { kind, body, dir: isSend ? "tx" : isRecv ? "rx" : "sys" };
 }
 
+// Position reads (M114) and their replies come from the Toolhead and Control screens, often
+// every few seconds, and from other open tabs and the log history too. They stay out of the
+// terminal unless someone typed M114 themselves (see term.unhide) or turns on "Show background".
+export const POSITION_POLL = [/^Send:\s*(N\d+\s+)?M114\b/, /^Recv:\s*(ok\s+)?X:-?[\d.]+\s+Y:-?[\d.]+/];
+
 export const term = {
   lines: [],
   max: 3000,
   silent: false,       // while true, new lines are flagged hidden (background queries like HELP)
+  showUntil: 0,        // someone typed M114 by hand: show position replies until then
   on: listeners(logSubs),
+  /** The person asked for the position themselves, so show the reply. */
+  unhide(ms = 6000) { this.showUntil = Date.now() + ms; },
   push(rawLines) {
     if (!rawLines?.length) return;
     const now = Date.now();
     const added = [];
     for (const raw of rawLines) {
       const c = classify(String(raw));
-      const line = { id: ++lineId, t: now, raw, kind: c.kind, body: c.body, dir: c.dir, hidden: this.silent && c.kind !== "err" };
+      const poll = now > this.showUntil && POSITION_POLL.some((re) => re.test(raw));
+      const hidden = (this.silent || poll) && c.kind !== "err";
+      const line = { id: ++lineId, t: now, raw, kind: c.kind, body: c.body, dir: c.dir, hidden };
       this.lines.push(line);
       added.push(line);
     }

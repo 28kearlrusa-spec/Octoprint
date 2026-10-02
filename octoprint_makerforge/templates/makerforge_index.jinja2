@@ -26,6 +26,17 @@
   <link rel="stylesheet" href="{{ sb }}/css/components.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ sb }}/css/shell.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ sb }}/css/views.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ sb }}/css/studio.css?v={{ asset_v }}">
+  <script>
+    // The look saved in this browser, set before anything is drawn so a light page never flashes dark.
+    try {
+      if ((JSON.parse(localStorage.getItem("mf.prefs.v1") || "{}") || {}).look === "studio") {
+        document.documentElement.setAttribute("data-look", "studio");
+        document.querySelector('meta[name="color-scheme"]').content = "light";
+        document.querySelector('meta[name="theme-color"]').content = "#ffffff";
+      }
+    } catch (e) { /* storage blocked: the default look */ }
+  </script>
 
   <script type="application/json" id="mf-boot">{{ boot|tojson }}</script>
   <script type="importmap">{{ import_map|tojson }}</script>

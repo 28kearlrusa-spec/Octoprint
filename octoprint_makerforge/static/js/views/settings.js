@@ -1,9 +1,12 @@
 // Settings: how the UI looks and what your printer's buttons do.
 import { html, raw, refs, debounce, esc, uid, download, copyText } from "mf/core/dom.js";
-import { store } from "mf/core/store.js";
+import { store, bus } from "mf/core/store.js";
 import { icon } from "mf/ui/icons.js";
-import { boot, octo, mf } from "mf/core/api.js";
-import { prefs, THEMES } from "mf/core/prefs.js";
+import { boot, octo, mf, get, post } from "mf/core/api.js";
+import { prefs, THEMES, LOOKS } from "mf/core/prefs.js";
+import { PANELS, dashPanels, setDashPanels, resetDashPanels, isCustom } from "mf/core/dash.js";
+import { createClassicFrame } from "mf/core/classic-frame.js";
+import { relative } from "mf/core/format.js";
 import { config } from "mf/core/config.js";
 import { DEFAULT_CONFIG } from "mf/core/defaults.js";
 import { can } from "mf/core/auth.js";
@@ -16,6 +19,7 @@ import { webcamInfo, bust } from "mf/core/webcam.js";
 
 const SECTIONS = [
   ["appearance", "Appearance", "palette"],
+  ["dashboard", "Print page", "grid"],
   ["printer", "Printer", "cube"],
   ["presets", "Presets", "flame"],
   ["macros", "Macros", "bolt"],
@@ -25,6 +29,8 @@ const SECTIONS = [
   ["upkeep", "Maintenance", "wrench"],
   ["notify", "Notifications", "bell"],
   ["interface", "Interface", "settings"],
+  ["updates", "Updates", "download"],
+  ["octoprint", "OctoPrint settings", "cpu"],
   ["data", "Data", "save"],
   ["about", "About", "info"],
 ];
@@ -106,31 +112,113 @@ function seg(options, current, onPick) {
 }
 
 const BUILDERS = {
-  appearance(host, { }) {
-    const grid = html`<div class="theme-grid"></div>`;
-    const paint = () => grid.replaceChildren(...THEMES.map((t) => {
-      const b = html`<button class="theme-card" aria-pressed="${prefs.get("theme") === t.id}"><div class="sw">${t.swatch.map((c) => html`<i style="background:${c}"></i>`)}<i style="background:#0b0b0d"></i></div><b>${t.name}</b><small>${t.note}</small></button>`;
-      b.addEventListener("click", () => { prefs.set("theme", t.id); paint(); });
+  appearance(host) {
+    const looks = html`<div class="look-grid"></div>`;
+    const drawLooks = () => looks.replaceChildren(...LOOKS.map((l) => {
+      const b = html`<button class="look-card" aria-pressed="${prefs.get("look") === l.id}">
+        <span class="look-prev is-${l.id}" aria-hidden="true"><i class="lp-bar"></i><i class="lp-rail"></i><span class="lp-main"><i></i><i></i><i></i></span></span>
+        <b>${l.name}</b><small>${l.note}</small></button>`;
+      b.addEventListener("click", () => { prefs.set("look", l.id); drawLooks(); drawThemes(); });
       return b;
     }));
-    paint();
+    const themes = html`<div class="col gap-3"></div>`;
+    const drawThemes = () => {
+      if (prefs.get("look") === "studio") {
+        themes.replaceChildren(html`<p class="hint">Studio is black, white and grey. The colour themes below belong to the MakerPrint look.</p>`);
+        return;
+      }
+      const grid = html`<div class="theme-grid"></div>`;
+      grid.append(...THEMES.map((t) => {
+        const b = html`<button class="theme-card" aria-pressed="${prefs.get("theme") === t.id}"><div class="sw">${t.swatch.map((c) => html`<i style="background:${c}"></i>`)}<i style="background:#0b0b0d"></i></div><b>${t.name}</b><small>${t.note}</small></button>`;
+        b.addEventListener("click", () => { prefs.set("theme", t.id); drawThemes(); });
+        return b;
+      }));
+      themes.replaceChildren(html`<div class="label">Colours</div>`, grid);
+    };
+    drawLooks();
+    drawThemes();
+    section(host, "Look", "saved in this browser", looks, themes);
+
     const sound = html`<label class="check"><input type="checkbox" ${prefs.get("sound") ? "checked" : ""}> Play a chime when a print finishes or fails</label>`;
     sound.querySelector("input").addEventListener("change", (e) => { prefs.set("sound", e.target.checked); if (e.target.checked) chime("done"); });
     const tab = html`<label class="check"><input type="checkbox" ${prefs.get("tabTitle") ? "checked" : ""}> Show progress in the browser tab title</label>`;
     tab.querySelector("input").addEventListener("change", (e) => prefs.set("tabTitle", e.target.checked));
-    section(host, "Look and feel", "saved in this browser",
-      grid,
-      html`<div class="form-grid"><div class="field"><label>Density</label></div><div class="field"><label>Motion</label></div></div>`,
-      sound, tab);
-    const fg = host.querySelector(".form-grid");
-    fg.children[0].append(seg([["comfortable", "Comfortable"], ["compact", "Compact"]], prefs.get("density"), (v) => prefs.set("density", v)));
-    fg.children[1].append(seg([["auto", "Follow my system"], ["reduced", "Reduce motion"]], prefs.get("motion"), (v) => prefs.set("motion", v)));
-    const claudeRow = html`<div class="field"><label>Claude button</label><div data-ref="seg"></div><div class="hint">Adds a Claude button at the bottom of the side bar. It opens claude.ai in a window docked beside this one, signed in with your own Claude account, chats and Claude Code included. Saved in this browser only, so nobody else gets it.</div></div>`;
+    const fg = html`<div class="form-grid"></div>`;
+    fg.append(
+      labelled("Density", seg([["comfortable", "Comfortable"], ["compact", "Compact"]], prefs.get("density"), (v) => prefs.set("density", v))),
+      labelled("Motion", seg([["auto", "Follow my system"], ["reduced", "Reduce motion"]], prefs.get("motion"), (v) => prefs.set("motion", v))),
+      labelled("Clock", seg([["auto", "Automatic"], ["12", "12-hour"], ["24", "24-hour"]], prefs.get("clock"), (v) => prefs.set("clock", v)), "Finish times, history and the kiosk clock."),
+    );
+    section(host, "Display", "saved in this browser", fg, sound, tab);
+
+    const claudeRow = html`<div class="field"><label>Claude button</label><div data-ref="seg"></div><div class="hint">Adds a Claude button to the navigation. It opens claude.ai in a window docked beside this one, signed in with your own Claude account, chats and Claude Code included. Saved in this browser only, so nobody else gets it.</div></div>`;
     claudeRow.querySelector("[data-ref=seg]").append(seg([["off", "Off"], ["code", "Claude Code"], ["chat", "Claude chat"]], prefs.get("claude"), (v) => prefs.set("claude", v)));
     section(host, "Claude", "this browser only", claudeRow);
     const kiosk = html`<div class="row wrap"><span class="grow muted">A stripped-back full-screen view for a tablet or screen mounted at the printer.</span><button class="btn">${raw(icon("maximize"))}Open kiosk mode</button></div>`;
     kiosk.querySelector("button").addEventListener("click", () => router.go("kiosk"));
     section(host, "Kiosk display", "", kiosk);
+  },
+
+  dashboard(host, { saved }) {
+    const look = prefs.get("look") === "studio" ? "studio" : "forge";
+    const lookName = LOOKS.find((l) => l.id === look)?.name || "this";
+    const list = html`<ul class="panel-list"></ul>`;
+    const btns = html`<div class="row wrap"><button class="btn btn-sm" data-a="all">Show every panel</button><button class="btn btn-sm btn-ghost" data-a="reset">Back to the ${lookName} default</button></div>`;
+    const reset = btns.querySelector("[data-a=reset]");
+    const draw = () => {
+      const shown = dashPanels(look);
+      const order = [...shown, ...PANELS.map((p) => p.id).filter((id) => !shown.includes(id))];
+      list.replaceChildren(...order.map((id) => {
+        const p = PANELS.find((x) => x.id === id);
+        const i = shown.indexOf(id);
+        const li = html`<li class="${i < 0 ? "is-off" : ""}">
+          <label class="check"><input type="checkbox" ${i < 0 ? "" : "checked"} aria-label="Show ${p.name}"></label>
+          <span class="pl-text"><span class="pl-name">${p.name}</span><span class="pl-note">${p.note}</span></span>
+          <span class="pl-move">
+            <button class="btn btn-sm btn-ghost btn-icon" data-mv="-1" aria-label="Move ${p.name} up" ${i > 0 ? "" : "disabled"}>${raw(icon("chev-up"))}</button>
+            <button class="btn btn-sm btn-ghost btn-icon" data-mv="1" aria-label="Move ${p.name} down" ${i >= 0 && i < shown.length - 1 ? "" : "disabled"}>${raw(icon("chev-down"))}</button>
+          </span></li>`;
+        li.querySelector("input").addEventListener("change", (e) => {
+          const next = dashPanels(look).filter((x) => x !== id);
+          if (e.target.checked) next.push(id);
+          setDashPanels(look, next); draw(); saved();
+        });
+        li.querySelector(".pl-move").addEventListener("click", (e) => {
+          const b = e.target.closest("[data-mv]");
+          if (!b) return;
+          const next = dashPanels(look);
+          const j = next.indexOf(id), k = j + Number(b.dataset.mv);
+          if (j < 0 || k < 0 || k >= next.length) return;
+          [next[j], next[k]] = [next[k], next[j]];
+          setDashPanels(look, next); draw(); saved();
+        });
+        return li;
+      }));
+      reset.disabled = !isCustom(look);
+    };
+    btns.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-a]")?.dataset.a;
+      if (a === "all") { setDashPanels(look, [...dashPanels(look), ...PANELS.map((p) => p.id).filter((id) => !dashPanels(look).includes(id))]); draw(); saved(); }
+      if (a === "reset") { resetDashPanels(look); draw(); saved(); }
+    });
+    draw();
+    section(host, "Panels", `for the ${lookName} look, in this browser`,
+      html`<p class="hint">Job, Temperatures and Console are wide and fill the first column; the others share the remaining columns, in this order. On a phone everything stacks in this order. Switch the look in Appearance to arrange the other one.</p>`,
+      list, btns);
+
+    const fg = html`<div class="form-grid"></div>`;
+    fg.append(
+      labelled("Toolhead position", seg([["0", "On request"], ["2", "Every 2 s"], ["5", "Every 5 s"], ["10", "Every 10 s"]], String(prefs.get("posPoll")), (v) => { prefs.set("posPoll", Number(v)); saved(); }), "Read with M114 while the printer is idle. Never during a print."),
+      labelled("Console lines", seg([["8", "8"], ["12", "12"], ["20", "20"], ["30", "30"]], String(prefs.get("consoleLines")), (v) => { prefs.set("consoleLines", Number(v)); saved(); })),
+      labelled("Hold to cancel a print", seg([["600", "0.6 s"], ["1000", "1 s"], ["2000", "2 s"]], String(prefs.get("holdMs")), (v) => { prefs.set("holdMs", Number(v)); saved(); }), "The kiosk always asks for at least 1.4 s."),
+    );
+    const temps = html`<label class="check"><input type="checkbox" ${prefs.get("termHideTemps") ? "checked" : ""}> Hide temperature reports in the console and terminal</label>`;
+    temps.querySelector("input").addEventListener("change", (e) => { prefs.set("termHideTemps", e.target.checked); saved(); });
+    const oks = html`<label class="check"><input type="checkbox" ${prefs.get("termHideOk") ? "checked" : ""}> Hide plain “ok” replies</label>`;
+    oks.querySelector("input").addEventListener("change", (e) => { prefs.set("termHideOk", e.target.checked); saved(); });
+    const heavy = html`<label class="check"><input type="checkbox" ${prefs.get("reduceHeavy") ? "checked" : ""}> Skip 3D previews on this device (for slow tablets)</label>`;
+    heavy.querySelector("input").addEventListener("change", (e) => { prefs.set("reduceHeavy", e.target.checked); saved(); });
+    section(host, "Behaviour", "saved in this browser", fg, temps, oks, heavy);
   },
 
   printer(host, { commit }) {
@@ -349,6 +437,151 @@ const BUILDERS = {
     skin.querySelector("input").addEventListener("change", (e) => set({ classic_skin: e.target.checked }));
     section(host, "Interface", "this changes OctoPrint for everyone", def, skin,
       html`<div class="hint">If you ever need the stock page back, add <code>?classic</code> to the address (for example <code>${location.origin}/?classic</code>).</div>`);
+  },
+
+  updates(host) {
+    if (!can("admin")) {
+      section(host, "Updates", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Only an administrator can update OctoPrint and its plugins.</div></div>`);
+      return;
+    }
+    const body = html`<div class="col gap-4">
+      <div class="row wrap"><span class="grow muted" data-ref="when">Asking GitHub and PyPI for the latest versions…</span>
+        <button class="btn" data-ref="check">${raw(icon("refresh"))}Check again</button>
+        <button class="btn btn-primary" data-ref="all" hidden>${raw(icon("download"))}Update all</button></div>
+      <div class="callout is-info" data-ref="note" hidden>${raw(icon("info"))}<div data-ref="noteText"></div></div>
+      <div class="up-list" data-ref="list"><div class="skeleton" style="height:120px"></div></div>
+      <pre class="up-log" data-ref="log" hidden></pre>
+    </div>`;
+    const r = refs(body);
+    section(host, "Updates", "OctoPrint's Software Update, always checked fresh", body,
+      html`<p class="hint">Updates install the same way as in OctoPrint's own Software Update. While a print runs they wait until it ends.</p>`);
+
+    let alive = true, busy = false;
+    const note = (text) => { r.note.hidden = !text; r.noteText.textContent = text || ""; };
+    const log = (line) => { r.log.hidden = false; r.log.textContent += `${line}\n`; r.log.scrollTop = r.log.scrollHeight; };
+    const rank = (id) => (id === "makerforge" ? 0 : id === "octoprint" ? 1 : id === "pip" ? 3 : 2);
+
+    function render(data) {
+      const info = data?.information || {};
+      const ids = Object.keys(info).sort((a, b) => rank(a) - rank(b) || String(info[a].displayName).localeCompare(String(info[b].displayName)));
+      const ready = ids.filter((id) => info[id].updateAvailable && info[id].updatePossible && !info[id].disabled);
+      r.when.textContent = data?.timestamp ? `Checked ${relative(data.timestamp)}. ${ready.length ? `${ready.length} update${ready.length === 1 ? "" : "s"} ready.` : "Everything is up to date."}` : "Checked just now.";
+      r.all.hidden = ready.length < 2 || busy;
+      r.all.onclick = () => run(ready);
+      const problems = [];
+      if (data?.environment && data.environment.supported === false) problems.push("This Python environment can't install updates directly.");
+      if (data?.storage && data.storage.sufficient === false) problems.push("There isn't enough free disk space to install updates.");
+      if (data?.status === "inProgress") problems.push("An update is installing right now.");
+      if (!busy) note(problems.join(" "));
+      r.list.replaceChildren(...ids.map((id) => {
+        const t = info[id];
+        const remote = t.information?.remote?.name;
+        let status = `Installed: ${t.displayVersion || t.information?.local?.name || "unknown"}`;
+        let tone = "muted";
+        if (t.disabled) status += ". Update checks are off for this one.";
+        else if (t.error) { status += `. Couldn't check: ${t.error}`; tone = "warn"; }
+        else if (t.online === false) status += ". Offline, can't check.";
+        else if (t.updateAvailable) { status += `. Version ${remote || "new"} is available.`; tone = ""; }
+        else status += ". Up to date.";
+        const row = html`<div class="up-item"><div class="up-name"><b>${t.displayName || id}</b><span class="${tone}">${status}</span></div></div>`;
+        if (t.releaseNotes && t.updateAvailable) row.append(html`<a class="btn btn-sm btn-ghost" href="${t.releaseNotes}" target="_blank" rel="noopener">${raw(icon("external"))}Release notes</a>`);
+        if (t.updateAvailable && t.updatePossible && !t.disabled) {
+          const b = html`<button class="btn btn-sm btn-primary">${raw(icon("download"))}Update to ${remote || "latest"}</button>`;
+          b.disabled = busy;
+          b.addEventListener("click", () => run([id], t.displayName || id));
+          row.append(b);
+        }
+        return row;
+      }));
+    }
+
+    async function check(force = true) {
+      r.check.classList.add("is-busy");
+      try {
+        const data = await get(`/plugin/softwareupdate/check${force ? "?force=true" : ""}`, { timeout: 120000 });
+        if (alive) render(data);
+      } catch (e) {
+        if (!alive) return;
+        r.when.textContent = e.status === 403 ? "Your account isn't allowed to check for updates."
+          : e.status === 404 ? "OctoPrint's Software Update plugin is turned off, so updates can't be checked here. Turn it on in Plugin Manager."
+          : `Couldn't check for updates: ${String(e.message).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160)}`;
+        r.list.replaceChildren();
+      } finally { r.check.classList.remove("is-busy"); }
+    }
+
+    async function run(targets, name) {
+      const ok = await confirmDialog({
+        title: targets.length > 1 ? `Install ${targets.length} updates?` : `Update ${name}?`,
+        text: "OctoPrint downloads and installs the update, then restarts. On a Raspberry Pi that takes a minute or two; leave the printer's computer on until this page comes back.",
+        confirm: "Update now",
+      });
+      if (!ok) return;
+      busy = true;
+      r.log.textContent = "";
+      log(`Starting: ${targets.join(", ")}`);
+      note("Installing. Progress shows below.");
+      body.querySelectorAll(".up-item .btn-primary").forEach((b) => { b.disabled = true; });
+      r.all.hidden = true;
+      try {
+        const res = await post("/plugin/softwareupdate/update", { targets }, { timeout: 60000 });
+        if (res?.queued) { busy = false; note("A print is running, so OctoPrint will install this when it ends."); log("Queued until the print ends."); }
+      } catch (e) { busy = false; note(""); log(`Couldn't start: ${e.message}`); toast.fail("The update didn't start", e); }
+    }
+
+    // OctoPrint reports progress over the live connection
+    let waitTimer = null;
+    function waitForRestart() {
+      let down = false;
+      const t0 = Date.now();
+      clearInterval(waitTimer);
+      waitTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`${boot.base || ""}/api/version`, { credentials: "same-origin", cache: "no-store" });
+          if (res.ok && (down || Date.now() - t0 > 20000)) { clearInterval(waitTimer); location.reload(); }
+          else if (!res.ok) down = true;
+        } catch { down = true; }
+      }, 3000);
+    }
+    const off = bus.on("plugin:softwareupdate", (msg) => {
+      const d = msg?.data || {};
+      switch (msg?.type) {
+        case "updating": log(`Updating ${d.name || d.target} to ${d.version}…`); break;
+        case "loglines": for (const l of d.loglines || []) log(l.line); break;
+        case "update_failed": log(`${d.name || d.target} failed: ${d.reason || "see OctoPrint's log"}`); break;
+        case "queued_updates": note(d.targets?.length ? "Waiting for the print to end, then these install." : ""); break;
+        case "restarting": busy = false; note("Installed. OctoPrint is restarting; this page reloads when it's back."); log("Restarting OctoPrint…"); waitForRestart(); break;
+        case "restart_manually": busy = false; note("Installed. Restart OctoPrint to finish, from the System panel on Print or with: sudo service octoprint restart"); check(false); break;
+        case "restart_failed": busy = false; note("Installed, but OctoPrint couldn't restart itself. Restart it by hand to finish."); check(false); break;
+        case "success": busy = false; note("Done."); check(false); break;
+        case "error": busy = false; note("The update failed. The log below says why."); check(false); break;
+        case "update_versions": if (!busy) check(false); break;
+        default: break;
+      }
+    });
+    r.check.addEventListener("click", () => check(true));
+    check(true);
+    return () => { alive = false; off(); clearInterval(waitTimer); };
+  },
+
+  octoprint(host) {
+    if (!can("settings")) {
+      section(host, "OctoPrint settings", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Only an administrator can change OctoPrint's own settings.</div></div>`);
+      return;
+    }
+    const wrap = html`<section class="panel plug-frame-panel" aria-label="OctoPrint settings">
+      <div class="plug-frame" data-ref="frame"><div class="plug-state" data-ref="state">${raw(icon("refresh", "i spin"))}<span>Opening OctoPrint's settings. On a Raspberry Pi this takes a few seconds.</span></div></div></section>`;
+    const r = refs(wrap);
+    host.append(wrap, html`<p class="hint">Every OctoPrint and plugin setting, in OctoPrint's own settings dialog. Save inside it as usual.</p>`);
+    const cf = createClassicFrame(r.frame);
+    cf.ready.then(() => {
+      const first = cf.parts().firstSettings;
+      r.state.remove();
+      cf.frame.classList.add("is-ready");
+      cf.show({ kind: "settings", id: first, full: true });
+    }).catch((e) => {
+      r.state.innerHTML = `${icon("alert")}<span>${esc(e.message || "OctoPrint's settings didn't load.")} <a class="link" href="${esc(boot.classicUrl)}" target="_blank" rel="noopener">Open the classic page</a></span>`;
+    });
+    return () => cf.destroy();
   },
 
   data(host) {

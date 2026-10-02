@@ -17,6 +17,7 @@ import * as jobinfo from "mf/core/jobinfo.js";
 import * as position from "mf/core/position.js";
 import { initDropzone } from "mf/ui/uploads.js";
 import { prefs } from "mf/core/prefs.js";
+import { setClock } from "mf/core/format.js";
 
 const appRoot = document.getElementById("app");
 const bootEl = document.getElementById("boot");
@@ -139,6 +140,8 @@ async function main() {
   initTooltips();
   initDropzone();
   prefs.set("theme", prefs.get("theme"));   // make sure <html> reflects saved prefs
+  setClock(prefs.get("clock"));
+  prefs.on((k) => { if (k === "clock" || k === "*") setClock(prefs.get("clock")); });
   let ok = false;
   try {
     ({ authorised: ok } = await auth.bootstrap());

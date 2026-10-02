@@ -39,9 +39,14 @@ export function clockDuration(sec) {
   return `${hr}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+// "auto" follows the browser's language; "12" and "24" force a clock (set from preferences)
+let clock = "auto";
+export function setClock(mode) { clock = mode === "12" || mode === "24" ? mode : "auto"; }
+const clockOpts = () => (clock === "24" ? { hourCycle: "h23" } : clock === "12" ? { hourCycle: "h12" } : {});
+
 export function timeOfDay(date) {
   if (!(date instanceof Date) || isNaN(date)) return DASH;
-  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", ...clockOpts() });
 }
 
 /** "9:42 PM", or "Tomorrow 1:10 AM" / "Thu 6:05 PM" when it lands on another day */
@@ -59,7 +64,7 @@ export function finishTime(date, now = new Date()) {
 export function dateTime(ts) {
   const d = ts instanceof Date ? ts : new Date(ts * 1000);
   if (isNaN(d)) return DASH;
-  return d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", ...clockOpts() });
 }
 
 export function dateOnly(ts) {
