@@ -24,6 +24,8 @@ Works with OctoPrint 1.9 and newer (developed against 1.11) on Python 3.7+. Ther
 
 **Tune**: quad gantry level and Z tilt results, probe accuracy, the paper test, a bed mesh heat map with profiles, PID tuning, pressure advance, input shaper results with a ready-to-paste `[input_shaper]` block, heat soak, calculators, usage statistics and maintenance reminders based on real print hours.
 
+**Plugins**: OctoPrint's Plugin Manager, plus every installed plugin's own tabs, sidebar panels and settings pages. They run in OctoPrint's classic page inside MakerPrint, so they work exactly as they do in the classic interface.
+
 Also: timelapses, four colour themes, a command palette (`Ctrl/Cmd+K`), a kiosk mode for a screen at the printer, and push notifications (ntfy, Discord, Slack or any URL) sent by the printer itself, so they arrive with every browser closed.
 
 **Macro prompts**: when a Klipper macro asks a question it appears as a dialog on every open screen. It uses Mainsail's `action:prompt_*` format, so macros written for Mainsail work unchanged. Marlin-style `M876` prompts and `action:notification` messages are shown too.
@@ -41,7 +43,13 @@ Also: timelapses, four colour themes, a command palette (`Ctrl/Cmd+K`), a kiosk 
 | ![The Voron theme](docs/screenshots/theme-voron.jpg) | ![Settings: themes](docs/screenshots/settings.jpg) |
 | Voron theme | Settings |
 
+![Plugins: OctoPrint's own Plugin Manager running inside MakerPrint](docs/screenshots/plugins.jpg)
+
 <img src="docs/screenshots/mobile-print.jpg" alt="The Print page on a phone" width="300">
+
+## A Claude button (optional, per browser)
+
+**Settings > Appearance > Claude button** adds a Claude button at the bottom of the side bar. It opens claude.ai (Claude Code or a chat) in a window docked beside the printer page, with your own claude.ai sign-in, chats and sessions. claude.ai can't be shown inside another site's page (it forbids framing), so a docked window is as close to built-in as browsers allow. The setting is stored in that browser only, so it's off for everyone else who uses the plugin.
 
 ## Install
 

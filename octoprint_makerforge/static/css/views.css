@@ -554,3 +554,22 @@
 }
 
 .shell[data-kiosk] .netbar { display: none; }
+
+/* ~~ plugins: OctoPrint's classic page in a frame ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+.plugins-layout { align-items: start; }
+.plug-frame-panel { min-width: 0; }
+.plug-frame { position: relative; height: calc(100dvh - var(--topbar-h) - var(--safe-t) - 128px); min-height: 480px; }
+.classic-frame { display: block; width: 100%; height: 100%; border: 0; background: var(--bg-1); opacity: 0; transition: opacity var(--dur-2); }
+.classic-frame.is-ready { opacity: 1; }
+.plug-state { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--s-3); padding: var(--s-6); text-align: center; color: var(--tx-3); }
+.plug-state span { max-width: 46ch; }
+.plug-group { padding: var(--s-4) var(--s-3) var(--s-1); color: var(--tx-3); font-size: var(--fs-xs); }
+.plug-group:first-child { padding-top: 0; }
+.plug-wait { padding: var(--s-2) var(--s-3); }
+@media (max-width: 899px) {
+  .plug-frame { height: calc(100dvh - var(--topbar-h) - var(--tabbar-h) - 180px - var(--safe-b)); min-height: 420px; }
+  .plug-group { display: none; }
+}
+/* the list scrolls by itself, so the page never has to and the frame stays put */
+.plugins-layout .set-nav { max-height: calc(100dvh - var(--topbar-h) - var(--safe-t) - 128px); overflow-y: auto; }
+@media (max-width: 899px) { .plugins-layout .set-nav { max-height: none; overflow-y: visible; } }

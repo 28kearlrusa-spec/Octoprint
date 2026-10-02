@@ -125,6 +125,9 @@ const BUILDERS = {
     const fg = host.querySelector(".form-grid");
     fg.children[0].append(seg([["comfortable", "Comfortable"], ["compact", "Compact"]], prefs.get("density"), (v) => prefs.set("density", v)));
     fg.children[1].append(seg([["auto", "Follow my system"], ["reduced", "Reduce motion"]], prefs.get("motion"), (v) => prefs.set("motion", v)));
+    const claudeRow = html`<div class="field"><label>Claude button</label><div data-ref="seg"></div><div class="hint">Adds a Claude button at the bottom of the side bar. It opens claude.ai in a window docked beside this one, signed in with your own Claude account, chats and Claude Code included. Saved in this browser only, so nobody else gets it.</div></div>`;
+    claudeRow.querySelector("[data-ref=seg]").append(seg([["off", "Off"], ["code", "Claude Code"], ["chat", "Claude chat"]], prefs.get("claude"), (v) => prefs.set("claude", v)));
+    section(host, "Claude", "this browser only", claudeRow);
     const kiosk = html`<div class="row wrap"><span class="grow muted">A stripped-back full-screen view for a tablet or screen mounted at the printer.</span><button class="btn">${raw(icon("maximize"))}Open kiosk mode</button></div>`;
     kiosk.querySelector("button").addEventListener("click", () => router.go("kiosk"));
     section(host, "Kiosk display", "", kiosk);

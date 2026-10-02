@@ -31,6 +31,7 @@ const ROUTES = [
   { id: "tune", title: "Tune", load: () => import("mf/views/tune.js") },
   { id: "timelapse", title: "Timelapse", load: () => import("mf/views/timelapse.js") },
   { id: "settings", title: "Settings", load: () => import("mf/views/settings.js") },
+  { id: "plugins", title: "Plugins", load: () => import("mf/views/plugins.js") },
   { id: "kiosk", title: "Kiosk", load: () => import("mf/views/kiosk.js") },
 ];
 

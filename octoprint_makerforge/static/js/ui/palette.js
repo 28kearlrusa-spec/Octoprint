@@ -62,6 +62,7 @@ async function build() {
     add(`Macros: ${m.cat || "Other"}`, m.name, "bolt", () => runMacro(m), { ic: null, rawIcon: macroIcon(m), disabled: !a.ok, hint: a.ok ? m.gcode.split("\n")[0] : a.reason, key: `${m.name} ${m.gcode}` });
   }
   for (const t of THEMES) add("Theme", `${t.name} theme`, "palette", () => prefs.set("theme", t.id));
+  add("Plugins", "Plugin Manager", "plugin", () => router.go("plugins", ["settings", "settings_plugin_pluginmanager"]));
   add("Account", "Open the classic OctoPrint UI", "external", () => { document.cookie = "mf_ui=classic; path=/; max-age=31536000; SameSite=Lax"; location.href = boot.classicUrl; });
   if (s.auth.loggedIn) add("Account", "Sign out", "logout", () => signOut());
 

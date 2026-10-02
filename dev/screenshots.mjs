@@ -128,13 +128,15 @@ async function startPrintAt(file, pct) {
 }
 
 try {
-  if (["control", "files", "tune", "terminal", "settings"].some(want)) { fixture("cool"); await sleep(500); }
+  if (["control", "files", "tune", "terminal", "settings", "plugins"].some(want)) { fixture("cool"); await sleep(500); }
   if (want("control")) await shot("control", { route: "control", ready: "!!document.querySelector('.a-jog .pad')" });
   if (want("files")) await shot("files", { route: "files", ready: "!!document.querySelector('.fcard[data-path]')", settle: 2200 });
   // The virtual printer isn't Klipper, so the Tune screen is fed text formatted exactly as Klipper's source prints it.
   if (want("tune")) await shot("tune", { route: "tune", height: 1500, ready: "!!document.querySelector('.tune-grid .panel')", after: TUNE_FEED, settle: 1800 });
   if (want("terminal")) await shot("terminal", { route: "terminal", ready: "!!document.querySelector('.term-log .tl')", after: TERM_FEED });
   if (want("settings")) await shot("settings", { route: "settings/appearance", ready: "!!document.querySelector('.theme-card')" });
+  // OctoPrint's own Plugin Manager, running inside MakerPrint
+  if (want("plugins")) await shot("plugins", { route: "plugins", ready: "!!document.querySelector('.classic-frame.is-ready')", settle: 3500 });
 
   if (want("theme-voron")) {
     fixture("heat", "215", "60"); await sleep(9000);

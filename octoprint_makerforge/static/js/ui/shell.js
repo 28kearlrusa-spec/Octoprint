@@ -13,6 +13,7 @@ import { signOut, can } from "mf/core/auth.js";
 import { config } from "mf/core/config.js";
 import { duration, num } from "mf/core/format.js";
 import { openConnect } from "mf/ui/connect.js";
+import { openClaude, claudeEnabled } from "mf/ui/claude.js";
 
 export const NAV = [
   { id: "print", label: "Print", icon: "cube" },
@@ -21,6 +22,7 @@ export const NAV = [
   { id: "terminal", label: "Terminal", icon: "terminal" },
   { id: "tune", label: "Tune", icon: "tune" },
   { id: "timelapse", label: "Timelapse", icon: "film" },
+  { id: "plugins", label: "Plugins", icon: "plugin" },
 ];
 const MOBILE_MAIN = ["print", "control", "files", "terminal"];
 
@@ -39,6 +41,7 @@ export function mountShell(root) {
           ${raw(NAV.map(linkHtml).join(""))}
         </nav>
         <div class="rail-foot">
+          <button class="rail-link rail-claude" data-ref="claude" aria-label="Open Claude" data-tip="Open Claude in a side window" hidden>${raw(icon("spark"))}<span>Claude</span></button>
           <a class="rail-link" href="#/settings" data-id="settings" aria-label="Settings">${raw(icon("settings"))}<span>Settings</span></a>
         </div>
       </aside>
@@ -179,12 +182,16 @@ export function mountShell(root) {
   r.netact.addEventListener("click", () => (store.get("klipper.detected") ? actions.firmwareRestart().catch(() => {}) : router.go("terminal")));
   r.user.addEventListener("click", () => userMenu(r.user));
   r.more.addEventListener("click", () => moreMenu(r.more));
+  r.claude.addEventListener("click", () => openClaude(prefs.get("claude")));
+  const syncClaude = () => { r.claude.hidden = !claudeEnabled(prefs.get("claude")); };
+  const offPrefs = prefs.on((k) => { if (k === "claude" || k === "*") syncClaude(); });
+  syncClaude();
 
   return {
     stage: el.querySelector("#stage"),
     el,
     markActive,
-    dispose() { offRoute(); offs.forEach((o) => o()); clearInterval(tick); },
+    dispose() { offRoute(); offs.forEach((o) => o()); offPrefs(); clearInterval(tick); },
   };
 }
 
@@ -221,6 +228,7 @@ function moreMenu(anchor) {
   openMenu(anchor, [
     ...NAV.filter((n) => !MOBILE_MAIN.includes(n.id)).map((n) => ({ label: n.label, icon: n.icon, onClick: () => router.go(n.id) })),
     { label: "Settings", icon: "settings", onClick: () => router.go("settings") },
+    claudeEnabled(prefs.get("claude")) && { label: "Claude", icon: "spark", onClick: () => openClaude(prefs.get("claude")) },
     { sep: true },
     { label: "Commands", icon: "command", onClick: () => bus.emit("palette:open") },
     { label: "Appearance", icon: "palette", onClick: () => userMenu(anchor) },

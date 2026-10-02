@@ -105,6 +105,7 @@ const S = {
   "list-checks": '<path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/>',
   queue: '<rect x="3" y="4" width="14" height="5" rx="1"/><rect x="3" y="11" width="14" height="5" rx="1"/><path d="M3 19h9M19 12v8M16 17l3 3 3-3"/>',
   plugin: '<path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 01-10 0V7z"/><path d="M12 16v5"/>',
+  spark: '<path d="M12 3v5.2M12 15.8V21M3 12h5.2M15.8 12H21M5.6 5.6l3.7 3.7M14.7 14.7l3.7 3.7M18.4 5.6l-3.7 3.7M9.3 14.7l-3.7 3.7"/>',
 
   // ~~ printer specific ~~
   nozzle: '<path d="M8 3h8v5H8z"/><path d="M9 8v3l3 5 3-5V8"/><path d="M12 16v2.5"/><path d="M9.5 21h5"/>',

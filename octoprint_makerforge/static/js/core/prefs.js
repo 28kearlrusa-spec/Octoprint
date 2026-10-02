@@ -23,6 +23,7 @@ const DEFAULTS = {
   chartHidden: [],
   reduceHeavy: false,      // skip the 3D previews on very slow devices
   kioskDim: true,
+  claude: "off",           // off | code | chat: a Claude button in the rail, this browser only
 };
 
 let cache = null;
