@@ -18,6 +18,7 @@ import { createLayerView } from "mf/ui/panels/layerview.js";
 import { get, post, PLUGIN } from "mf/core/api.js";
 import { hasCommand } from "mf/core/klipper-watch.js";
 import { loadSpools, setActiveSpool } from "mf/core/spools.js";
+import { queue, startNext } from "mf/core/queue.js";
 
 const thumbBox = (path, mtime, big = false) => path
   ? `<span class="thumb ${big ? "is-lg" : ""}" data-thumb>${icon("cube")}<img alt="" loading="lazy" src="${esc(mf.thumbUrl(path, mtime))}"></span>`
@@ -32,11 +33,12 @@ export function watchThumbs(root) {
 }
 
 /** "Bed clear? Filament loaded?" checklist before a print starts. Resolves true to go ahead. */
-export async function preflight(path, metaInfo) {
+export async function preflight(path, metaInfo, { bedClear = false } = {}) {
   const pf = config.data.preflight || {};
   const sp = await loadSpools().catch(() => null);
   const spools = sp && (sp.mode === "local" || sp.mode === "spoolman") ? sp.spools : [];
-  if ((pf.enabled === false || !pf.items?.length) && !spools.length) return true;
+  const items = [...(bedClear ? ["The bed is clear of the last print"] : []), ...(pf.enabled === false ? [] : pf.items || [])];
+  if (!items.length && !spools.length) return true;
   const want = (metaInfo?.info?.filamentType || "").toUpperCase();
   const spoolField = spools.length ? html`<div class="field"><label for="pf-spool">Spool</label>
     <select class="select" id="pf-spool"><option value="">None</option>${spools.map((x) => html`<option value="${x.id}" ${String(x.id) === String(sp.active) ? "selected" : ""}>${x.name}${x.material ? ` (${x.material})` : ""}${x.remainingG != null ? `, ${Math.round(x.remainingG)} g left` : ""}</option>`)}</select>
@@ -57,7 +59,7 @@ export async function preflight(path, metaInfo) {
       </div>
       ${spoolField}
       <div class="col gap-3" data-ref="list">
-        ${pf.enabled === false ? "" : (pf.items || []).map((t, i) => html`<label class="check"><input type="checkbox" data-i="${i}"> ${t}</label>`)}
+        ${items.map((t, i) => html`<label class="check"><input type="checkbox" data-i="${i}"> ${t}</label>`)}
       </div>
     </div>`;
   const boxes = () => Array.from(body.querySelectorAll("input[type=checkbox]"));
@@ -89,10 +91,11 @@ export async function preflight(path, metaInfo) {
   return ok;
 }
 
-export async function startWithChecks(path) {
+/** Run the checks, then start. Resolves true when the print was started. */
+export async function startWithChecks(path, opts) {
   const m = await mf.meta(path).catch(() => null);
-  if (!(await preflight(path, m))) return;
-  try { await actions.startPrint(path); } catch { /* toast shown */ }
+  if (!(await preflight(path, m, opts))) return false;
+  try { await actions.startPrint(path); return true; } catch { return false; /* toast shown */ }
 }
 
 export function mountJob(host) {
@@ -173,6 +176,7 @@ export function mountJob(host) {
     if (mode === "done") {
       return `${head(false)}
         <div class="callout is-ok">${icon("check")}<div>Print complete. Let the bed cool before you take the part off.</div></div>
+        <div data-v="queue"></div>
         <div class="job-actions">
           <button class="btn btn-primary" data-act="again" ${online ? "" : "disabled"}>${icon("refresh")}Print again</button>
           <button class="btn" data-act="cool" ${online ? "" : "disabled"}>${icon("snow")}Cool down</button>
@@ -189,6 +193,7 @@ export function mountJob(host) {
         </div>`;
     }
     return `${offline}
+      <div data-v="queue"></div>
       <div class="job-empty">
         <div class="empty-title">No file selected</div>
         <p class="empty-text">Choose one in Files, or drop G-code anywhere on this page to upload it.</p>
@@ -287,6 +292,8 @@ export function mountJob(host) {
     const metaParts = [info.slicer && esc(info.slicer.split(" ")[0]), info.filamentType && esc(info.filamentType), info.layerHeight && `${info.layerHeight} mm layers`, mode === "active" && s.job?.user && `by ${esc(s.job.user)}`];
     setV("meta", `<div class="job-meta">${metaParts.filter(Boolean).map((t) => `<span>${t}</span>`).join("")}${mode === "done" ? `<span>Finished in ${duration(s.progress?.printTime)}</span>` : ""}</div>`);
 
+    const q = queue();
+    setV("queue", q.length && (mode === "done" || mode === "empty") ? `<div class="queue-next"><span class="grow" style="min-width:0">Next in the queue: <b>${esc(stripExt(q[0].name))}</b>${q.length > 1 ? ` <span class="muted">and ${q.length - 1} more</span>` : ""}</span><button class="btn btn-primary btn-sm" data-act="next" ${online && can("print") ? "" : "disabled"}>${icon("play")}Start next</button></div>` : "");
     if (mode === "active") {
       const left = timeLeft(s);
       const at = layerAt(ji?.layers, s.progress?.filepos);
@@ -351,6 +358,7 @@ export function mountJob(host) {
   }
 
   r.body.addEventListener("click", async (e) => {
+    if (e.target.closest('[data-act="next"]')) { startNext(); return; }
     if (!e.target.closest('[data-act="pauseat-off"]')) return;
     try { pauseAt = await post(`${PLUGIN}/api/pauseat`, { layer: null }); render(); } catch (err) { toast.fail("Couldn't change that", err); }
   });

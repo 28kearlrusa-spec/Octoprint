@@ -682,3 +682,12 @@
 .spool-left { text-align: right; }
 .spool-left b { font-size: var(--fs-lg); }
 .spool-left span { display: block; font-size: var(--fs-xs); }
+
+/* print queue */
+.queue-panel { margin-bottom: var(--gutter); }
+.queue-list { margin: 0; padding: 0; list-style: none; }
+.queue-list li { display: flex; align-items: center; gap: var(--s-2); padding: 4px var(--s-4); border-top: 1px solid var(--line-1); min-width: 0; }
+.queue-list li:first-child { border-top: 0; background: var(--bg-3); }
+.queue-list li.is-missing { color: var(--tx-3); }
+.queue-n { width: 2ch; color: var(--tx-3); text-align: right; }
+.queue-next { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; padding: var(--s-2) var(--s-3); border: 1px solid var(--line-2); background: var(--bg-3); font-size: var(--fs-sm); }

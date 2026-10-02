@@ -61,6 +61,9 @@ export const DEFAULT_CONFIG = {
     { id: "sb", name: "Toolhead", klipper: "sb_leds", enabled: false },
   ],
 
+  // Files waiting to be printed, in order: [{id, path, name, addedAt}]
+  queue: [],
+
   // Maintenance reminders, in print hours since last done
   maintenance: [
     { id: "rails", name: "Lube linear rails", everyHours: 250 },

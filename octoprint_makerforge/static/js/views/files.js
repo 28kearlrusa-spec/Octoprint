@@ -15,6 +15,8 @@ import { toast } from "mf/ui/toast.js";
 import { uploadFiles, setFolderProvider } from "mf/ui/uploads.js";
 import { watchThumbs, startWithChecks } from "mf/ui/panels/job.js";
 import { config } from "mf/core/config.js";
+import { queue, addToQueue, removeFromQueue, moveInQueue, clearQueue, startNext } from "mf/core/queue.js";
+import { isPrinting } from "mf/core/status.js";
 
 const SORTS = {
   "date-desc": ["Newest first", (a, b) => (b.date || 0) - (a.date || 0)],
@@ -61,6 +63,7 @@ export default {
           </div>
         </div>
         <div class="storage" data-ref="storage"></div>
+        <div data-ref="queue"></div>
         <div data-ref="body"></div>
         <div data-ref="selbar"></div>
       </div>`;
@@ -76,6 +79,7 @@ export default {
     setFolderProvider(() => folder);
 
     async function load() {
+      queueMicrotask(() => renderQueue());
       try {
         const res = await octo.files();
         tree = res.files || [];
@@ -159,6 +163,7 @@ export default {
     }
 
     function render() {
+      renderQueue();
       renderCrumbs();
       r.mode.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === prefs.get("filesView"))));
       r.sortl.textContent = SORTS[sortKey][0];
@@ -193,6 +198,7 @@ export default {
     function renderSelbar() {
       if (!sel.size) { r.selbar.replaceChildren(); return; }
       const bar = html`<div class="selbar cut cut-s"><b>${sel.size}</b> selected
+        <button class="btn btn-sm" data-a="queue">${raw(icon("queue"))}Queue</button>
         <button class="btn btn-sm" data-a="move">${raw(icon("folder"))}Move</button>
         <button class="btn btn-sm btn-danger" data-a="del">${raw(icon("trash"))}Delete</button>
         <button class="btn btn-sm btn-ghost" data-a="none">Clear</button></div>`;
@@ -201,6 +207,7 @@ export default {
         if (a === "none") { sel.clear(); render(); }
         if (a === "del") await deleteMany(Array.from(sel));
         if (a === "move") await moveMany(Array.from(sel));
+        if (a === "queue") { await queueFiles(Array.from(sel).map(findFile).filter((f) => f && !f.children)); sel.clear(); render(); }
       });
       r.selbar.replaceChildren(bar);
     }
@@ -254,10 +261,49 @@ export default {
       try { await octo.createFolder(name.trim(), folder); toast.ok("Folder created", name.trim()); load(); } catch (e) { toast.fail("Couldn't create the folder", e); }
     });
 
+    // ~~ queue ~~
+    function renderQueue() {
+      const q = queue();
+      if (!q.length) { r.queue.replaceChildren(); return; }
+      const total = q.reduce((a, item) => a + (findFile(item.path)?.gcodeAnalysis?.estimatedPrintTime || 0), 0);
+      const busy = isPrinting(store.state) || !store.get("printer.flags.operational");
+      const box = html`<section class="panel queue-panel" aria-label="Print queue">
+        <div class="panel-head"><h2 class="panel-title">Queue</h2><span class="panel-sub">${q.length} ${q.length === 1 ? "file" : "files"}${total ? `, about ${duration(total)} of printing` : ""}</span>
+          <div class="panel-tools"><button class="btn btn-sm btn-primary" data-q="next" ${busy || !can("print") ? "disabled" : ""} data-tip="${busy ? "Available when the printer is free" : "Start the first file once the bed is clear"}">${raw(icon("play"))}Start next</button>
+          <button class="btn btn-sm btn-ghost" data-q="clear">Clear</button></div></div>
+        <ol class="queue-list">${q.map((item, i) => {
+          const f = findFile(item.path);
+          return html`<li data-id="${item.id}" class="${f ? "" : "is-missing"}"><span class="queue-n tnum">${i + 1}</span>
+            <span class="grow truncate">${stripExt(item.name)}${f ? "" : html` <span class="warn">(file is gone)</span>`}</span>
+            <span class="muted tnum">${f?.gcodeAnalysis?.estimatedPrintTime ? duration(f.gcodeAnalysis.estimatedPrintTime) : ""}</span>
+            <button class="btn btn-sm btn-ghost btn-icon" data-q="up" aria-label="Move up" ${i ? "" : "disabled"}>${raw(icon("chev-up"))}</button>
+            <button class="btn btn-sm btn-ghost btn-icon" data-q="down" aria-label="Move down" ${i < q.length - 1 ? "" : "disabled"}>${raw(icon("chev-down"))}</button>
+            <button class="btn btn-sm btn-ghost btn-icon" data-q="rm" aria-label="Remove from queue">${raw(icon("x"))}</button></li>`;
+        })}</ol></section>`;
+      box.addEventListener("click", async (e) => {
+        const b = e.target.closest("[data-q]");
+        if (!b) return;
+        const id = b.closest("li")?.dataset.id;
+        try {
+          if (b.dataset.q === "next") await startNext();
+          if (b.dataset.q === "clear" && await confirmDialog({ title: "Clear the queue?", confirm: "Clear" })) await clearQueue();
+          if (b.dataset.q === "up") await moveInQueue(id, -1);
+          if (b.dataset.q === "down") await moveInQueue(id, 1);
+          if (b.dataset.q === "rm") await removeFromQueue(id);
+        } catch (err) { toast.fail("Couldn't change the queue", err); }
+      });
+      r.queue.replaceChildren(box);
+    }
+    const offQueue = [store.on("config", renderQueue), store.on("printer", debounce(renderQueue, 400))];
+    const queueFiles = async (files) => {
+      try { await addToQueue(files); toast.ok(files.length === 1 ? "Added to the queue" : `${files.length} files queued`, files.length === 1 ? stripExt(files[0].name) : ""); } catch (e) { toast.fail("Couldn't add to the queue", e); }
+    };
+
     // ~~ file actions ~~
     function fileMenu(f) {
       return [
         { label: "Print…", icon: "play", onClick: () => startWithChecks(f.path) },
+        { label: "Add to queue", icon: "queue", onClick: () => queueFiles([f]) },
         { label: "Select", icon: "check", onClick: () => actions.selectFile(f.path).then(() => toast.ok("Selected", f.name)).catch(() => {}) },
         { label: "Details", icon: "info", onClick: () => openDetail(f) },
         { sep: true },
@@ -355,7 +401,7 @@ export default {
     load();
     return {
       onRoute: goRoute,
-      unmount() { offBus(); io.disconnect(); setFolderProvider(() => ""); },
+      unmount() { offBus(); offQueue.forEach((o) => o()); io.disconnect(); setFolderProvider(() => ""); },
     };
   },
 };
