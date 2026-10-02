@@ -231,13 +231,15 @@ const BUILDERS = {
       labelled("Console lines", seg([["8", "8"], ["12", "12"], ["20", "20"], ["30", "30"]], String(prefs.get("consoleLines")), (v) => { prefs.set("consoleLines", Number(v)); saved(); })),
       labelled("Hold to cancel a print", seg([["600", "0.6 s"], ["1000", "1 s"], ["2000", "2 s"]], String(prefs.get("holdMs")), (v) => { prefs.set("holdMs", Number(v)); saved(); }), "The kiosk always asks for at least 1.4 s."),
     );
+    const pg = html`<label class="check"><input type="checkbox" ${prefs.get("consolePrintGcode") ? "checked" : ""}> Show print G-code in the console during a print</label>`;
+    pg.querySelector("input").addEventListener("change", (e) => { prefs.set("consolePrintGcode", e.target.checked); saved(); });
     const temps = html`<label class="check"><input type="checkbox" ${prefs.get("termHideTemps") ? "checked" : ""}> Hide temperature reports in the console and terminal</label>`;
     temps.querySelector("input").addEventListener("change", (e) => { prefs.set("termHideTemps", e.target.checked); saved(); });
     const oks = html`<label class="check"><input type="checkbox" ${prefs.get("termHideOk") ? "checked" : ""}> Hide plain “ok” replies</label>`;
     oks.querySelector("input").addEventListener("change", (e) => { prefs.set("termHideOk", e.target.checked); saved(); });
     const heavy = html`<label class="check"><input type="checkbox" ${prefs.get("reduceHeavy") ? "checked" : ""}> Skip 3D previews on this device (for slow tablets)</label>`;
     heavy.querySelector("input").addEventListener("change", (e) => { prefs.set("reduceHeavy", e.target.checked); saved(); });
-    section(host, "Behaviour", "saved in this browser", fg, temps, oks, heavy);
+    section(host, "Behaviour", "saved in this browser", fg, pg, temps, oks, heavy);
   },
 
   printer(host, { commit }) {

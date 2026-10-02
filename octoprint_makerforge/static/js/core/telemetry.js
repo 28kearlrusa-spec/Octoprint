@@ -78,6 +78,22 @@ export const term = {
   on: listeners(logSubs),
   /** The person asked for the position themselves, so show the reply. */
   unhide(ms = 6000) { this.showUntil = Date.now() + ms; },
+  typed: [],           // commands someone typed in the terminal or console: [{cmd, at}]
+  /** Remember a typed command, so views that hide streamed print G-code still show it. */
+  markTyped(text) {
+    const now = Date.now();
+    this.typed = this.typed.filter((t) => now - t.at < 120000);
+    for (const line of String(text).split("\n")) {
+      const cmd = line.trim().toUpperCase();
+      if (cmd) this.typed.push({ cmd, at: now });
+    }
+  },
+  /** Was this "Send:" line one of the typed commands (and not G-code from the file)? */
+  isTyped(line) {
+    if (line.kind !== "send" || !this.typed.length) return false;
+    const body = line.body.replace(/^N\d+\s+/, "").replace(/\*\d+$/, "").trim().toUpperCase();
+    return this.typed.some((t) => line.t >= t.at - 1000 && line.t - t.at < 120000 && body === t.cmd);
+  },
   push(rawLines) {
     if (!rawLines?.length) return;
     const now = Date.now();

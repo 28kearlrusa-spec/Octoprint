@@ -30,6 +30,7 @@ const DEFAULTS = {
   posPoll: 5,              // seconds between position reads on the Toolhead panel, 0 = only on demand
   holdMs: 1000,            // how long Cancel print has to be held
   consoleLines: 12,        // lines shown by the Console panel on Print
+  consolePrintGcode: false, // show the file's streamed G-code in the Console during a print
 };
 
 let cache = null;

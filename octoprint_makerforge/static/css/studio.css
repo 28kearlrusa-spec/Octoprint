@@ -239,6 +239,8 @@ html[data-look="studio"] .shell[data-tone="ok"] .top-state .dot { background: va
   html[data-look="studio"] .rail-link[aria-current="page"] .i { color: var(--tx-1); }
   html[data-look="studio"] .rail-claude { color: var(--tx-4); }
   html[data-look="studio"] .stage { grid-column: 1; grid-row: 3; }
+  html[data-look="studio"] .shell[data-kiosk] { grid-template-rows: minmax(0, 1fr); }
+  html[data-look="studio"] .shell[data-kiosk] .stage { grid-row: 1; }
   html[data-look="studio"] .netbar { top: calc(var(--topbar-h) + var(--nav-h) + var(--safe-t)); }
   html[data-look="studio"] .set-nav { top: calc(var(--topbar-h) + var(--nav-h) + var(--gutter)); }
   html[data-look="studio"] .plug-frame { height: calc(100dvh - var(--topbar-h) - var(--nav-h) - var(--safe-t) - 120px); }
@@ -349,6 +351,9 @@ html[data-look="studio"] .k-cam { background: #101215; border-radius: 8px; }
 html[data-look="studio"] .k-bar { background: var(--bg-4); border-radius: 7px; }
 html[data-look="studio"] .k-bar > i { border-radius: 7px; }
 html[data-look="studio"] .k-pct { font-weight: 400; }
+html[data-look="studio"] .k-thumb { background: var(--bg-2); border-radius: 10px; }
+html[data-look="studio"] .k-bigclock { font-weight: 300; }
+html[data-look="studio"] .k-actions .btn { border-radius: 10px; }
 
 /* 3D viewer overlays */
 html[data-look="studio"] .vw { background: #eef0f2; }

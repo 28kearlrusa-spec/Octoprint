@@ -2,6 +2,7 @@
 // The full terminal (search, filters, autocomplete) is one click away.
 import { html, raw, refs, debounce, esc } from "mf/core/dom.js";
 import { store } from "mf/core/store.js";
+import { isPrinting } from "mf/core/status.js";
 import { term } from "mf/core/telemetry.js";
 import { icon } from "mf/ui/icons.js";
 import { prefs } from "mf/core/prefs.js";
@@ -31,7 +32,20 @@ export function mountConsole(host) {
   const r = refs(el);
   host.append(el);
 
-  const visible = (l) => !l.hidden && !(l.kind === "temp" && prefs.get("termHideTemps")) && !(l.kind === "ok" && prefs.get("termHideOk"));
+  // During a print the file streams thousands of moves through the log. Unless asked for,
+  // the console drops those and their "ok"s and keeps what matters: typed commands and
+  // their replies, errors, Klipper's "//" messages and action prompts.
+  const visible = (l) => {
+    if (l.hidden) return false;
+    if (l.kind === "temp" && prefs.get("termHideTemps")) return false;
+    if (l.kind === "ok" && prefs.get("termHideOk")) return false;
+    if (printing() && !prefs.get("consolePrintGcode")) {
+      if (l.kind === "ok") return false;
+      if (l.kind === "send" && !term.isTyped(l)) return false;
+    }
+    return true;
+  };
+  const printing = () => isPrinting(store.state);
   const lineEl = (l) => {
     const d = document.createElement("div");
     d.className = `tl tl-${l.kind}`;
@@ -63,6 +77,7 @@ export function mountConsole(host) {
     if (/^M112\b/i.test(text) && !(await confirmDialog({ title: "Emergency stop?", text: "M112 halts the printer immediately. You'll need a firmware restart afterwards.", confirm: "Send M112", danger: true }))) return;
     try {
       if (/\bM114\b/i.test(text)) term.unhide();
+      term.markTyped(text);
       await actions.gcode(text);
       if (history[history.length - 1] !== text) { history.push(text); saveHistory(history); }
       hIdx = history.length;
@@ -89,7 +104,8 @@ export function mountConsole(host) {
   }
   const offs = [
     store.on("printer", enable), store.on("auth", enable),
-    prefs.on((k) => { if (k === "consoleLines" || k === "termHideTemps" || k === "termHideOk" || k === "*") render(); }),
+    prefs.on((k) => { if (k === "consoleLines" || k === "termHideTemps" || k === "termHideOk" || k === "consolePrintGcode" || k === "*") render(); }),
+    store.on("printer", render),
   ];
   enable();
   render();

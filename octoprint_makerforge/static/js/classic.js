@@ -3,6 +3,16 @@
  * This file is bundled into OctoPrint's own page (not the MakerPrint app). It only toggles the
  * `mf-skin` class from the plugin setting, so the skin in classic.css can be switched off.
  */
+// Inside MakerPrint's frames, OctoPrint focusing a field must not scroll MakerPrint's page
+if (/[?&]mfembed=1/.test(location.search)) {
+    (function () {
+        var focus = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function (opts) {
+            return focus.call(this, $.extend({}, opts, { preventScroll: true }));
+        };
+    })();
+}
+
 $(function () {
     function MakerPrintClassicViewModel(parameters) {
         var self = this;

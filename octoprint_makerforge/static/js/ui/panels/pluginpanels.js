@@ -18,7 +18,7 @@ export function mountPluginPanels(host) {
   host.append(el);
   if (!can("settings_read") && !can("admin")) { r.state.textContent = "Your account can't see plugin panels."; return { dispose() { el.remove(); } }; }
 
-  const cf = createClassicFrame(r.host);
+  const cf = createClassicFrame(r.host, { pinScroll: true });
   let ro = null, timer = null;
   const fit = () => { const h = cf.contentHeight(); if (h > 0) cf.frame.style.height = `${Math.min(h + 4, 1400)}px`; };
   cf.ready.then(() => {

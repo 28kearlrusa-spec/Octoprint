@@ -59,7 +59,7 @@ const shown = (el, win) => !!el && win.getComputedStyle(el).display !== "none";
  * Load the classic page into `host`. Resolves {win, doc} once OctoPrint's classic interface has
  * finished starting, or rejects after `timeoutMs`.
  */
-export function createClassicFrame(host, { timeoutMs = 90000 } = {}) {
+export function createClassicFrame(host, { timeoutMs = 90000, pinScroll = false } = {}) {
   const frame = document.createElement("iframe");
   frame.className = "classic-frame";
   frame.title = "OctoPrint plugin page";
@@ -144,12 +144,28 @@ export function createClassicFrame(host, { timeoutMs = 90000 } = {}) {
     try { return Math.ceil(doc.querySelector("#sidebar")?.getBoundingClientRect().height || doc.body.scrollHeight); } catch { return 0; }
   }
 
+  // A frame further down a page can still pull the page to itself while OctoPrint starts
+  // (autofocus, scrollIntoView). With pinScroll, any scroll the person didn't make is undone.
+  let unpin = () => {};
+  if (pinScroll) {
+    let lastInput = 0, y = window.scrollY;
+    const mark = () => { lastInput = Date.now(); };
+    const onScroll = () => {
+      if (Date.now() - lastInput < 1200) { y = window.scrollY; return; }
+      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(window.scrollX, y);
+    };
+    const evs = ["wheel", "touchstart", "touchmove", "keydown", "pointerdown"];
+    evs.forEach((e) => window.addEventListener(e, mark, { passive: true, capture: true }));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    unpin = () => { evs.forEach((e) => window.removeEventListener(e, mark, { capture: true })); window.removeEventListener("scroll", onScroll); };
+  }
+
   return {
     frame,
     ready,
     contentHeight,
     parts,
     show,
-    destroy() { alive = false; frame.remove(); },
+    destroy() { alive = false; unpin(); frame.remove(); },
   };
 }

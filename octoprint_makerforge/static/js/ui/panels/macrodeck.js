@@ -5,6 +5,8 @@ import { icon } from "mf/ui/icons.js";
 import { config } from "mf/core/config.js";
 import { can } from "mf/core/auth.js";
 import { availability, runMacro, grouped, macroIcon, openMacroEditor } from "mf/ui/macros.js";
+import { prefs } from "mf/core/prefs.js";
+import { dashPanels } from "mf/core/dash.js";
 
 export function mountMacroDeck(host) {
   const el = html`
@@ -19,7 +21,9 @@ export function mountMacroDeck(host) {
 
   function render() {
     const q = r.q.value.trim().toLowerCase();
-    const list = (config.data.macros || []).filter((m) => !q || `${m.name} ${m.cat} ${m.gcode}`.toLowerCase().includes(q));
+    // the Klipper panel already has restart, save and status buttons: don't show them twice
+    const skipKlipper = dashPanels().includes("klipper");
+    const list = (config.data.macros || []).filter((m) => (!skipKlipper || m.cat !== "Klipper") && (!q || `${m.name} ${m.cat} ${m.gcode}`.toLowerCase().includes(q)));
     const groups = grouped(list);
     if (!groups.size) {
       r.body.replaceChildren(html`<p class="hint">${q ? "No macro matches that." : "No macros yet. Add some with the edit button."}</p>`);
@@ -40,7 +44,7 @@ export function mountMacroDeck(host) {
 
   r.q.addEventListener("input", render);
   r.edit.addEventListener("click", () => openMacroEditor());
-  const offs = [store.on("printer", render), store.on("klipper", render), store.on("temps", render), store.on("config", render), store.on("auth", render)];
+  const offs = [store.on("printer", render), store.on("klipper", render), store.on("temps", render), store.on("config", render), store.on("auth", render), prefs.on((k) => { if (k === "dash" || k === "*") render(); })];
   r.edit.hidden = !can("control");
   render();
   return { dispose() { offs.forEach((o) => o()); el.remove(); } };

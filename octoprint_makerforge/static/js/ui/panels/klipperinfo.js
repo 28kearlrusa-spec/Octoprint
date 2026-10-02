@@ -22,7 +22,10 @@ export function mountKlipperInfo(host) {
   const el = html`
     <section class="panel a-klipper" aria-label="Klipper">
       <div class="panel-head"><h2 class="panel-title">Klipper</h2><span class="chip" data-ref="state">–</span></div>
-      <div class="panel-body col gap-4">
+      <div class="panel-body col gap-4" data-ref="none" hidden>
+        <p class="muted">This printer isn't running Klipper (its firmware says <b data-ref="fw">something else</b>), so there's nothing to show here. You can remove this panel in Settings › Print page.</p>
+      </div>
+      <div class="panel-body col gap-4" data-ref="body">
         <dl class="kv" data-ref="kv"></dl>
         <div class="callout is-warn" data-ref="pending" hidden>${raw(icon("save"))}<div>Calibration results are waiting. <b>Save config</b> writes them to printer.cfg and restarts Klipper.</div></div>
         <div class="callout is-err" data-ref="err" hidden>${raw(icon("alert"))}<div data-ref="errText"></div></div>
@@ -48,6 +51,9 @@ export function mountKlipperInfo(host) {
     else if (!online && k.state !== "shutdown") [label, tone] = ["Offline", ""];
     r.state.textContent = label;
     r.state.className = `chip ${tone}`;
+    r.none.hidden = k.detected !== false;
+    r.body.hidden = k.detected === false;
+    r.fw.textContent = k.firmware || "something else";
 
     const cmds = k.commands ? Object.keys(k.commands).length : null;
     const q = k.lastQgl, p = k.lastProbe, pid = k.lastPid, mesh = k.mesh;
