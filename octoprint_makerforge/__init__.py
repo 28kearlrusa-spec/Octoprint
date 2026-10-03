@@ -104,7 +104,8 @@ class MakerForgePlugin(
         self._meta = None
         self._stats = None
         self._spools = None
-        self._notifier = Notifier(lambda: self._settings.get(["webhooks"]), self._printer_name, None)
+        self._notifier = Notifier(lambda: self._settings.get(["webhooks"]), self._printer_name, None, get_snapshot=self._snapshot_jpeg)
+        self._first_layer_for = None
         self._import_map_cache = None
         self._log = logging.getLogger("octoprint.plugins.makerforge")
         # "pause at layer": {path, layer, filepos, action}, watched on the server so it fires
@@ -640,6 +641,66 @@ class MakerForgePlugin(
             self._pause_announce(fired=bool(fired))
             return
 
+    # ~~ Camera picture for notifications ----------------------------------------------
+
+    def _snapshot_url(self):
+        url = ""
+        try:
+            url = ((self._cfg().get().get("webcam") or {}).get("snapshotUrl") or "").strip()
+        except Exception:
+            url = ""
+        if not url:
+            for path in (["plugins", "classicwebcam", "snapshot"], ["webcam", "snapshot"]):
+                try:
+                    url = (self._settings.global_get(path) or "").strip()
+                except Exception:
+                    url = ""
+                if url:
+                    break
+        if url.startswith("/"):
+            url = "http://127.0.0.1" + url   # OctoPi serves the camera on port 80 next to OctoPrint
+        return url if re.match(r"^https?://", url) else ""
+
+    def _snapshot_jpeg(self):
+        url = self._snapshot_url()
+        if not url:
+            return None
+        import requests
+        res = requests.get(url, timeout=5, stream=True)
+        res.raise_for_status()
+        data = res.raw.read(8 * 1024 * 1024 + 1, decode_content=True)
+        if len(data) > 8 * 1024 * 1024 or not data.startswith(b"\xff\xd8"):
+            return None   # too big, or not a JPEG
+        return data
+
+    def _watch_first_layer(self, path, payload):
+        # "First layer done" fires when OctoPrint starts reading layer 2 of the file
+        self._first_layer_for = path
+        deadline = time.time() + 6 * 3600
+        start2 = None
+        while self._first_layer_for == path and time.time() < deadline:
+            time.sleep(3)
+            if not (self._printer.is_printing() or self._printer.is_paused()):
+                return
+            if start2 is None:
+                try:
+                    status, scan = self._meta_service().layers(path, start=False)
+                except Exception:
+                    return
+                if status == "ready":
+                    layers = scan.get("layers") or []
+                    if len(layers) < 3:
+                        return
+                    start2 = layers[1][1]
+                elif status not in ("running", "pending", "missing"):
+                    return
+                continue
+            pos = ((self._printer.get_current_data() or {}).get("progress") or {}).get("filepos") or 0
+            if pos >= start2:
+                self._first_layer_for = None
+                self._notifier.handle("FirstLayerDone", payload)
+                return
+
     # ~~ Events ---------------------------------------------------------------------
 
     def on_event(self, event, payload):
@@ -648,7 +709,12 @@ class MakerForgePlugin(
             if event == "PrintStarted" and payload.get("origin") == "local":
                 # make sure the layer map exists for the file we are about to spend hours on
                 self._meta_service().prefetch(payload.get("path"))
+                if any("FirstLayerDone" in (h.get("events") or []) for h in (self._settings.get(["webhooks"]) or []) if isinstance(h, dict)):
+                    t = threading.Thread(target=self._watch_first_layer, args=(payload.get("path"), dict(payload)), name="makerforge-firstlayer")
+                    t.daemon = True
+                    t.start()
             elif event in ("PrintDone", "PrintFailed", "PrintCancelled"):
+                self._first_layer_for = None
                 self._record_print(event, payload)
             self._notifier.handle(event, payload)
         except Exception:  # pragma: no cover - never let bookkeeping disturb a print

@@ -469,7 +469,7 @@ const BUILDERS = {
     const s = store.get("settings")?.plugins?.makerforge || {};
     let hooks = clone(s.webhooks || []);
     const list = html`<div class="col gap-3"></div>`;
-    const EV = [["PrintStarted", "Started"], ["PrintDone", "Finished"], ["PrintFailed", "Failed"], ["PrintCancelled", "Cancelled"], ["PrintPaused", "Paused"], ["Error", "Error"]];
+    const EV = [["PrintStarted", "Started"], ["FirstLayerDone", "First layer done"], ["PrintDone", "Finished"], ["PrintFailed", "Failed"], ["PrintCancelled", "Cancelled"], ["PrintPaused", "Paused"], ["Error", "Error"]];
     const persist = async () => {
       try { await octo.saveSettings({ plugins: { makerforge: { webhooks: hooks } } }); toast.ok("Notifications saved", "", { timeout: 1500 }); const fresh = await octo.settings(); store.set("settings", fresh); }
       catch (e) { toast.fail("Couldn't save notifications", e); }
@@ -484,10 +484,12 @@ const BUILDERS = {
           </div>
           <div class="field"><label>Address</label><input class="input is-mono" type="url" value="${h.url || ""}" data-k="url" placeholder="https://ntfy.sh/your-secret-topic"></div>
           <div class="events">${raw(EV.map(([v, l]) => `<label class="check"><input type="checkbox" data-ev="${v}" ${(h.events || []).includes(v) ? "checked" : ""}> ${l}</label>`).join(""))}</div>
+          <label class="check"><input type="checkbox" data-snap ${h.snapshot !== false ? "checked" : ""}> Attach a camera picture (Discord and ntfy, when finished, failed, paused or after the first layer)</label>
           <div class="row"><button class="btn btn-sm" data-a="test">${raw(icon("bell", "i i-sm"))}Send a test</button><button class="btn btn-sm btn-ghost" data-a="del">${raw(icon("trash", "i i-sm"))}Remove</button></div></div>`;
         row.addEventListener("input", (e) => {
           const k = e.target.dataset.k, ev = e.target.dataset.ev;
           if (k) h[k] = e.target.value; if (ev) h.events = Array.from(row.querySelectorAll("[data-ev]")).filter((x) => x.checked).map((x) => x.dataset.ev);
+          if (e.target.matches("[data-snap]")) h.snapshot = e.target.checked;
           save();
         });
         row.addEventListener("click", async (e) => {
@@ -505,7 +507,7 @@ const BUILDERS = {
     };
     draw();
     const add = html`<button class="btn">${raw(icon("plus"))}Add a service</button>`;
-    add.addEventListener("click", () => { hooks.push({ name: "Phone", type: "ntfy", url: "", events: ["PrintDone", "PrintFailed"], enabled: true }); draw(); });
+    add.addEventListener("click", () => { hooks.push({ name: "Phone", type: "ntfy", url: "", events: ["FirstLayerDone", "PrintDone", "PrintFailed"], enabled: true, snapshot: true }); draw(); });
     section(host, "Notifications", "sent from the printer's computer, so they work with the tab closed",
       html`<div class="callout is-info">${raw(icon("info"))}<div><b>ntfy.sh</b> is the easiest: install the ntfy app, pick a hard-to-guess topic, and use <code>https://ntfy.sh/your-topic</code> here. Discord and Slack take a webhook URL.</div></div>`, list, add);
   },

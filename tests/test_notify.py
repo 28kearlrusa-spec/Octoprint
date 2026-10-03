@@ -37,6 +37,18 @@ class HookTests(unittest.TestCase):
         self.assertEqual(j["json"]["event"], "PrintDone")
         self.assertIn("Took 1h 30m", j["json"]["message"])
 
+    def test_snapshot_attachments(self):
+        jpeg = b"\xff\xd8fake"
+        _u, d = notify.build_request({"type": "discord", "url": "https://d/x"}, "PrintDone", {"name": "a"}, "", jpeg)
+        self.assertEqual(d["files"]["file"][1], jpeg)
+        self.assertIn("attachment://snapshot.jpg", d["data"]["payload_json"])
+        _u, n = notify.build_request({"type": "ntfy", "url": "https://n/t"}, "FirstLayerDone", {"name": "a"}, "", jpeg)
+        self.assertEqual(n["data"], jpeg)
+        self.assertEqual(n["headers"]["Filename"], "snapshot.jpg")
+        _u, sl = notify.build_request({"type": "slack", "url": "https://s/x"}, "PrintDone", {"name": "a"}, "", jpeg)
+        self.assertIn("text", sl["json"])   # Slack webhooks can't take files: text only
+        self.assertTrue(notify.clean_hook({"url": "https://x/", "events": ["FirstLayerDone"]})["snapshot"])
+
     def test_handle_only_matching_events(self):
         sent = []
 
