@@ -358,6 +358,12 @@ class MakerForgePlugin(
         if not isinstance(data, dict):
             return flask.make_response(flask.jsonify(error="Expected a JSON object."), 400)
         expected = data.pop("rev", None)
+        # The camera addresses are fetched by the printer's computer (notification pictures,
+        # time-lapse preview), so changing them takes the settings permission, not just control.
+        if not Permissions.SETTINGS.can():
+            current = self._cfg().get() or {}
+            if (data.get("webcam") or {}) != (current.get("webcam") or {}) and ("webcam" in data or "webcam" in current):
+                return flask.make_response(flask.jsonify(error="Only an administrator can change the camera addresses."), 403)
         try:
             doc = self._cfg().put(data, expected_rev=expected)
         except ConflictError:
@@ -500,7 +506,9 @@ class MakerForgePlugin(
                 out["spools"] = Spoolman(self._settings.get(["spoolman_url"])).spools()
                 out["active"] = data.get("spoolmanActive")
             except Exception as exc:
-                out["error"] = "Couldn't reach Spoolman: {}".format(str(exc)[:160])
+                # the details (and the server's address) are for administrators only
+                self._log.warning("Spoolman unreachable: %s", exc)
+                out["error"] = "Couldn't reach Spoolman." + (" {}".format(str(exc)[:160]) if Permissions.ADMIN.can() else "")
         return flask.jsonify(out)
 
     @octoprint.plugin.BlueprintPlugin.route("/api/spools", methods=["POST"])
@@ -669,7 +677,7 @@ class MakerForgePlugin(
         if not url:
             return None
         import requests
-        res = requests.get(url, timeout=5, stream=True)
+        res = requests.get(url, timeout=5, stream=True, allow_redirects=False)
         res.raise_for_status()
         data = res.raw.read(8 * 1024 * 1024 + 1, decode_content=True)
         if len(data) > 8 * 1024 * 1024 or not data.startswith(b"\xff\xd8"):

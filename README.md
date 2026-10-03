@@ -28,6 +28,14 @@ Works with OctoPrint 1.9 and newer (developed against 1.11) on Python 3.7+. Ther
 
 **Two looks** (Settings > Appearance): *MakerPrint*, dark graphite with the logo colours and the essentials on the Print page, and *Studio*, a light black-white-and-grey workspace with a top navigation bar and every panel on the Print page: toolhead position and moves, a console, all macros, Klipper state and last calibration results, the host computer (storage, Pi power, restart and shutdown) and usage. **Settings > Print page** picks the panels and their order for each look.
 
+**Printing**: a live view of the current layer from above, the print's pace compared with the slicer's estimate, and *Pause at layer* (or a filament change with M600), watched by the printer's computer so it works with every browser closed.
+
+**Spools**: a list of your spools, or a Spoolman server. Pick the spool before a print; the filament it uses comes off that spool when it ends, with a warning when the material doesn't match or there isn't enough left.
+
+**Queue**: line files up on the Files screen and start the next one with one click, after confirming the bed is clear.
+
+**Camera**: more than one camera, a small camera view on every screen, and a time-lapse of the current print from pictures saved every 20 seconds. Notifications can carry a camera picture (Discord and ntfy), and there's a *first layer done* notification so you can check the first layer from your phone.
+
 **Updates** (Settings > Updates) always checks fresh and installs updates for this plugin, OctoPrint and other plugins, with the log shown as it runs. **Settings > OctoPrint settings** opens OctoPrint's full settings dialog without leaving MakerPrint.
 
 Also: timelapses, four colour themes, a command palette (`Ctrl/Cmd+K`), a kiosk mode for a screen at the printer, and push notifications (ntfy, Discord, Slack or any URL) sent by the printer itself, so they arrive with every browser closed.
