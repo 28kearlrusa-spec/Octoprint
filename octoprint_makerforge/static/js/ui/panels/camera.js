@@ -3,7 +3,7 @@
 import { html, raw, refs, download } from "mf/core/dom.js";
 import { store } from "mf/core/store.js";
 import { icon } from "mf/ui/icons.js";
-import { webcamInfo, webcamTransform, bust } from "mf/core/webcam.js";
+import { webcamTransform, bust, webcamList, currentWebcam } from "mf/core/webcam.js";
 import { prefs } from "mf/core/prefs.js";
 import { toast } from "mf/ui/toast.js";
 import * as router from "mf/core/router.js";
@@ -15,6 +15,9 @@ export function mountCamera(host, { compact = false } = {}) {
         <h2 class="panel-title">Camera</h2>
         <span class="panel-sub" data-ref="sub"></span>
         <div class="panel-tools">
+          <select class="select select-sm cam-pick" data-ref="pick" aria-label="Camera" hidden></select>
+          <button class="btn btn-ghost btn-icon btn-sm" data-ref="lapse" aria-label="Time-lapse of this print" data-tip="Time-lapse of this print so far">${raw(icon("film"))}</button>
+          <button class="btn btn-ghost btn-icon btn-sm" data-ref="pip" aria-label="Keep the camera on every screen" data-tip="Keep a small camera on every screen">${raw(icon("minimize"))}</button>
           <button class="btn btn-ghost btn-icon btn-sm" data-ref="reload" aria-label="Reload stream" data-tip="Reload stream">${raw(icon("refresh"))}</button>
           <button class="btn btn-ghost btn-icon btn-sm" data-ref="snap" aria-label="Save snapshot" data-tip="Save snapshot">${raw(icon("camera"))}</button>
           <button class="btn btn-ghost btn-icon btn-sm" data-ref="full" aria-label="Full screen" data-tip="Full screen">${raw(icon("maximize"))}</button>
@@ -29,7 +32,7 @@ export function mountCamera(host, { compact = false } = {}) {
   const r = refs(el);
   host.append(el);
 
-  let info = webcamInfo();
+  let info = currentWebcam(prefs.get("camName"));
   let retry = null;
   let snapTimer = null;
   let attempts = 0;
@@ -63,7 +66,11 @@ export function mountCamera(host, { compact = false } = {}) {
 
   function start() {
     stop();
-    info = webcamInfo();
+    const list = webcamList();
+    info = currentWebcam(prefs.get("camName"));
+    r.pick.hidden = list.length < 2;
+    r.pick.innerHTML = list.map((c) => `<option value="${c.name.replace(/"/g, "")}" ${c.name === info.name ? "selected" : ""}>${c.label.replace(/[<>&]/g, "")}</option>`).join("");
+    r.pip.setAttribute("aria-pressed", String(!!prefs.get("camPip")));
     r.img.style.transform = webcamTransform(info);
     r.sub.textContent = "";
     if (!prefs.get("camOpen")) return;
@@ -96,6 +103,13 @@ export function mountCamera(host, { compact = false } = {}) {
   document.addEventListener("visibilitychange", onVisibility);
 
   r.reload.addEventListener("click", start);
+  r.pick.addEventListener("change", () => prefs.set("camName", r.pick.value));
+  r.pip.addEventListener("click", () => {
+    prefs.set("camPip", !prefs.get("camPip"));
+    toast.info(prefs.get("camPip") ? "Camera on every screen" : "Camera only on Print", prefs.get("camPip") ? "A small view stays in the corner when you leave this page." : "");
+    r.pip.setAttribute("aria-pressed", String(!!prefs.get("camPip")));
+  });
+  r.lapse.addEventListener("click", async () => (await import("mf/ui/lapse.js")).openLapse());
   r.full.addEventListener("click", () => {
     const f = r.frame;
     if (document.fullscreenElement) document.exitFullscreen();
@@ -123,7 +137,7 @@ export function mountCamera(host, { compact = false } = {}) {
     }
   });
 
-  const offs = [store.on("settings", start), store.on("config", start)];
+  const offs = [store.on("settings", start), store.on("config", start), prefs.on((k) => { if (k === "camName") start(); })];
   start();
 
   return {

@@ -17,6 +17,8 @@ const DEFAULTS = {
   termHideTemps: true,
   termHideOk: false,
   camOpen: true,
+  camName: "",             // which camera, when OctoPrint has more than one
+  camPip: false,           // a small camera view on every screen
   camMode: "camera",       // camera | machine | toolpath on the dashboard stage
   filesView: "grid",       // grid | list
   filesSort: "date-desc",

@@ -15,6 +15,8 @@ from __future__ import absolute_import
 
 import base64
 import hashlib
+import json
+import io
 import logging
 import os
 import re
@@ -106,6 +108,7 @@ class MakerForgePlugin(
         self._spools = None
         self._notifier = Notifier(lambda: self._settings.get(["webhooks"]), self._printer_name, None, get_snapshot=self._snapshot_jpeg)
         self._first_layer_for = None
+        self._preview_for = None
         self._import_map_cache = None
         self._log = logging.getLogger("octoprint.plugins.makerforge")
         # "pause at layer": {path, layer, filepos, action}, watched on the server so it fires
@@ -701,6 +704,80 @@ class MakerForgePlugin(
                 self._notifier.handle("FirstLayerDone", payload)
                 return
 
+    # ~~ Time-lapse preview: a camera picture every so often during a print ------------
+
+    PREVIEW_MAX = 240
+
+    def _preview_dir(self):
+        return os.path.join(self.get_plugin_data_folder(), "preview")
+
+    def _preview_frames(self):
+        try:
+            return sorted(n for n in os.listdir(self._preview_dir()) if re.match(r"^\d{6}\.jpg$", n))
+        except OSError:
+            return []
+
+    def _record_preview(self, path, name):
+        folder = self._preview_dir()
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+        for n in self._preview_frames():
+            try:
+                os.remove(os.path.join(folder, n))
+            except OSError:
+                pass
+        with io.open(os.path.join(folder, "info.json"), "w", encoding="utf-8") as fh:
+            fh.write(json.dumps({"name": name, "path": path, "started": int(time.time())}))
+        self._preview_for = path
+        interval, n, last = 20.0, 0, 0.0
+        while self._preview_for == path and (self._printer.is_printing() or self._printer.is_paused()):
+            time.sleep(2)
+            if time.time() - last < interval or self._printer.is_paused():
+                continue
+            last = time.time()
+            try:
+                jpeg = self._snapshot_jpeg()
+            except Exception:
+                jpeg = None
+            if not jpeg:
+                continue
+            n += 1
+            with open(os.path.join(folder, "%06d.jpg" % n), "wb") as fh:
+                fh.write(jpeg)
+            frames = self._preview_frames()
+            if len(frames) >= self.PREVIEW_MAX:
+                # long print: keep every other frame and slow down, so the whole print still fits
+                for victim in frames[1::2]:
+                    try:
+                        os.remove(os.path.join(folder, victim))
+                    except OSError:
+                        pass
+                interval *= 2
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/preview", methods=["GET"])
+    @Permissions.WEBCAM.require(403)
+    def api_preview(self):
+        info = {}
+        try:
+            with io.open(os.path.join(self._preview_dir(), "info.json"), "r", encoding="utf-8") as fh:
+                info = json.load(fh)
+        except (IOError, ValueError):
+            info = {}
+        return flask.jsonify(frames=self._preview_frames(), name=info.get("name"), started=info.get("started"),
+                             recording=self._preview_for is not None)
+
+    @octoprint.plugin.BlueprintPlugin.route("/api/preview/<frame>", methods=["GET"])
+    @Permissions.WEBCAM.require(403)
+    def api_preview_frame(self, frame):
+        if not re.match(r"^\d{6}\.jpg$", frame):
+            return flask.make_response("", 404)
+        target = os.path.join(self._preview_dir(), frame)
+        if not os.path.isfile(target):
+            return flask.make_response("", 404)
+        response = flask.send_file(target, mimetype="image/jpeg")
+        response.headers["Cache-Control"] = "private, max-age=86400"
+        return response
+
     # ~~ Events ---------------------------------------------------------------------
 
     def on_event(self, event, payload):
@@ -709,12 +786,17 @@ class MakerForgePlugin(
             if event == "PrintStarted" and payload.get("origin") == "local":
                 # make sure the layer map exists for the file we are about to spend hours on
                 self._meta_service().prefetch(payload.get("path"))
+                if self._snapshot_url():
+                    t = threading.Thread(target=self._record_preview, args=(payload.get("path"), payload.get("name") or ""), name="makerforge-preview")
+                    t.daemon = True
+                    t.start()
                 if any("FirstLayerDone" in (h.get("events") or []) for h in (self._settings.get(["webhooks"]) or []) if isinstance(h, dict)):
                     t = threading.Thread(target=self._watch_first_layer, args=(payload.get("path"), dict(payload)), name="makerforge-firstlayer")
                     t.daemon = True
                     t.start()
             elif event in ("PrintDone", "PrintFailed", "PrintCancelled"):
                 self._first_layer_for = None
+                self._preview_for = None
                 self._record_print(event, payload)
             self._notifier.handle(event, payload)
         except Exception:  # pragma: no cover - never let bookkeeping disturb a print

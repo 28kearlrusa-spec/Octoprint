@@ -367,3 +367,6 @@ html[data-look="studio"] .classic-frame { background: #ffffff; }
 html[data-look="studio"] .plug-frame-panel { overflow: hidden; }
 html[data-look="studio"] .job-layer { border-radius: 6px; background: var(--bg-3); }
 html[data-look="studio"] .pauseat-note { border-radius: 6px; }
+html[data-look="studio"] .pip { border-radius: 10px; border-color: var(--line-2); }
+html[data-look="studio"] .lapse-frame { border-radius: 8px; }
+html[data-look="studio"] .pip .pip-x { --fill: rgb(0 0 0 / 0.55); --edge: transparent; --ink: #ffffff; border-radius: 6px; }

@@ -14,6 +14,7 @@ import { config } from "mf/core/config.js";
 import { duration, num } from "mf/core/format.js";
 import { openConnect } from "mf/ui/connect.js";
 import { openClaude, claudeEnabled } from "mf/ui/claude.js";
+import { mountPip } from "mf/ui/pip.js";
 
 export const NAV = [
   { id: "print", label: "Print", icon: "cube" },
@@ -187,11 +188,13 @@ export function mountShell(root) {
   const offPrefs = prefs.on((k) => { if (k === "claude" || k === "*") syncClaude(); });
   syncClaude();
 
+  const offPip = mountPip(el);
+
   return {
     stage: el.querySelector("#stage"),
     el,
     markActive,
-    dispose() { offRoute(); offs.forEach((o) => o()); offPrefs(); clearInterval(tick); },
+    dispose() { offRoute(); offs.forEach((o) => o()); offPrefs(); offPip(); clearInterval(tick); },
   };
 }
 
