@@ -77,12 +77,12 @@ Start it on the Pi inside `tmux`, so it keeps running after you close SSH:
 ```bash
 sudo apt install -y tmux
 cd ~/makerprint
-tmux new -s claude 'claude remote-control --name "MakerPrint Pi"'
+tmux new -s claude 'claude remote-control'
 ```
 
 Leave it with `Ctrl+B` then `D`. It keeps running; `tmux attach -t claude` brings it back.
 
-Then in MakerPrint: **Settings → Appearance → Claude button → Claude Code**. A Claude button appears at the bottom of the menu. It opens claude.ai/code docked beside the printer page: pick the **MakerPrint Pi** session and type what you want changed. Reload the printer page to see JavaScript and CSS changes, and restart OctoPrint for Python changes.
+Then in MakerPrint: **Settings → Appearance → Claude button → Claude Code**. A Claude button appears at the bottom of the menu. It opens claude.ai/code docked beside the printer page: pick the Pi's session (it's named after the Pi's hostname, usually octopi) and type what you want changed. Reload the printer page to see JavaScript and CSS changes, and restart OctoPrint for Python changes.
 
 If the Pi reboots, SSH in and run the `tmux new ...` line again (or `claude remote-control --continue` within a few hours to pick up the same session).
 
