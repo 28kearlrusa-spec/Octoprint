@@ -19,6 +19,7 @@ import { initDropzone } from "mf/ui/uploads.js";
 import { prefs } from "mf/core/prefs.js";
 import { setClock } from "mf/core/format.js";
 import { initSpools } from "mf/core/spools.js";
+import { initMachineHint } from "mf/core/machines.js";
 
 const appRoot = document.getElementById("app");
 const bootEl = document.getElementById("boot");
@@ -34,6 +35,7 @@ const ROUTES = [
   { id: "timelapse", title: "Timelapse", load: () => import("mf/views/timelapse.js") },
   { id: "settings", title: "Settings", load: () => import("mf/views/settings.js") },
   { id: "plugins", title: "Plugins", load: () => import("mf/views/plugins.js") },
+  { id: "p", title: "Plugin", load: () => import("mf/views/pluginpage.js") },
   { id: "kiosk", title: "Kiosk", load: () => import("mf/views/kiosk.js") },
 ];
 
@@ -77,6 +79,7 @@ function wireOnce() {
   jobinfo.init();
   position.init();
   initSpools();
+  initMachineHint({ toast, can: auth.can, prefs, go: router.go });
   bus.on("event:Connected", refreshProfile);
   bus.on("event:PrinterProfileModified", refreshProfile);
 }

@@ -52,6 +52,24 @@ const RULES = [
     make: (m) => ({ section: m[1], zOffset: +m[2] }),
   },
   {
+    // SCREWS_TILT_CALCULATE: "front right : x=200.0, y=48.0, z=2.36250 : adjust CW 00:12"
+    id: "screw",
+    re: /^(.+?)\s*(\(base\))?\s*:\s*x=\s*(-?[\d.]+),\s*y=\s*(-?[\d.]+),\s*z=\s*(-?[\d.]+)(?:\s*:\s*adjust\s+(CW|CCW)\s+(\d+):(\d+))?/i,
+    make: (m) => ({ name: m[1].trim(), base: !!m[2], x: +m[3], y: +m[4], z: +m[5], dir: m[6] ? m[6].toUpperCase() : null, turns: m[6] ? +m[7] + +m[8] / 60 : 0, clock: m[6] ? `${m[7]}:${m[8]}` : "" }),
+  },
+  {
+    // EXTRUDER_RESULT (the E3NG config): "Extruded 97.5 mm of 100. rotation_distance 34.406 -> 33.546."
+    id: "extruder-result",
+    re: /Extruded\s+(\d+(?:\.\d+)?)\s*mm of 100\.\s*rotation_distance\s+(\d+(?:\.\d+)?)\s*->\s*(\d+(?:\.\d+)?)/i,
+    make: (m) => ({ moved: +m[1], old: +m[2], next: +m[3] }),
+  },
+  {
+    // PRINT_MODE (the E3NG config): "Print mode: quiet"
+    id: "print-mode",
+    re: /^Print mode:\s*(quiet|normal|fast)/i,
+    make: (m) => ({ mode: m[1].toLowerCase() }),
+  },
+  {
     id: "pending-config",
     re: /The SAVE_CONFIG command will update the printer config file/i,
     make: () => ({ pending: true }),

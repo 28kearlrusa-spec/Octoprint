@@ -10,6 +10,7 @@ import { COMMON_GCODE, KLIPPER_COMMANDS } from "mf/core/klipper.js";
 import { config } from "mf/core/config.js";
 import { toast } from "mf/ui/toast.js";
 import { confirmDialog } from "mf/ui/dialog.js";
+import { mountPluginDock } from "mf/ui/panels/plugindock.js";
 
 const MAX_DOM = 900;
 const HISTORY_KEY = "mf.term.history.v1";
@@ -254,6 +255,7 @@ export default {
     requestAnimationFrame(() => { r.log.scrollTop = r.log.scrollHeight; });
     if (matchMedia("(hover: hover)").matches) r.inp.focus();
 
-    return { unmount() { offTerm(); offs.forEach((o) => o()); } };
+    const dock = mountPluginDock(el, "terminal");
+    return { unmount() { offTerm(); offs.forEach((o) => o()); dock.dispose(); } };
   },
 };

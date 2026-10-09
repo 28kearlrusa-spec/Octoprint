@@ -310,3 +310,22 @@
 /* the Claude button sits quietly above Settings until it's wanted */
 .rail-claude { color: var(--tx-4); }
 .rail-claude:hover { color: var(--tx-1); }
+
+/* plugins: their menu entries, and their buttons in the top bar */
+.rail-plugins { display: contents; }
+.plug-tray { display: flex; align-items: center; gap: 2px; min-width: 0; overflow: hidden; }
+.plug-tray:empty { display: none; }
+.tray-item { max-width: 180px; gap: 6px; }
+.tray-item[hidden] { display: none; }
+.tray-face { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; }
+.tray-face * { background: none !important; border: 0 !important; margin: 0 !important; padding: 0 !important; float: none !important; position: static !important; font-size: inherit; line-height: 1.2; text-decoration: none !important; box-shadow: none !important; }
+.tray-face img { max-height: 18px; width: auto; }
+.tray-face .caret { display: none; }
+.tray-icon { display: inline-flex; }
+/* plugins mark states with classes their own stylesheet colours: the common ones */
+.tray-face .on, .tray-face .text-success, .tray-face .success { color: var(--ok) !important; }
+.tray-face .off { color: var(--tx-3) !important; }
+.tray-face .text-error, .tray-face .text-danger, .tray-face .error, .tray-face .danger { color: var(--err, #e5534b) !important; }
+.tray-face .text-warning, .tray-face .warning { color: var(--warn) !important; }
+.tray-pop { position: fixed; width: 0; height: 0; z-index: var(--z-menu); pointer-events: none; }
+@media (max-width: 899px) { .plug-tray { display: none; } }

@@ -17,6 +17,8 @@ import { openMacroEditor } from "mf/ui/macros.js";
 import { chime } from "mf/core/events.js";
 import { webcamInfo, bust } from "mf/core/webcam.js";
 import { loadSpools, saveSpool, deleteSpool, setActiveSpool } from "mf/core/spools.js";
+import * as pluginHost from "mf/core/plugin-host.js";
+import { MACHINES, applyMachine } from "mf/core/machines.js";
 
 const SECTIONS = [
   ["appearance", "Appearance", "palette"],
@@ -32,6 +34,7 @@ const SECTIONS = [
   ["notify", "Notifications", "bell"],
   ["interface", "Interface", "settings"],
   ["plugins", "Plugin Manager", "plugin"],
+  ["plugin-places", "Plugins on pages", "grid"],
   ["updates", "Updates", "download"],
   ["octoprint", "OctoPrint settings", "cpu"],
   ["data", "Data", "save"],
@@ -246,6 +249,18 @@ const BUILDERS = {
 
   printer(host, { commit }) {
     const c = config.data;
+    const machines = html`<div class="col gap-3">${MACHINES.map((m) => html`
+      <div class="row between wrap gap-3 machine-row"><div class="grow" style="min-width:220px"><b>${m.name}</b>${c.machine === m.id ? html` <span class="chip is-ok">In use</span>` : ""}<div class="hint">${m.note}</div></div>
+        <button class="btn btn-sm" data-machine="${m.id}" ${can("control") ? "" : "disabled"}>${raw(icon("check"))}Use this setup</button></div>`)}</div>`;
+    machines.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-machine]");
+      if (!b) return;
+      const m = MACHINES.find((x) => x.id === b.dataset.machine);
+      if (!(await confirmDialog({ title: `Set up for ${m.name}?`, text: "This replaces the macros, material presets, fans, lights, the before-printing checklist and maintenance reminders for everyone. Camera, spools, queue and plugin places stay.", confirm: "Use this setup" }))) return;
+      try { await applyMachine(m.id); toast.ok("Setup changed", m.name); router.go("settings", "printer", { replace: true }); }
+      catch (err) { toast.fail("Couldn't change the setup", err); }
+    });
+    section(host, "Machine", "buttons, presets and reminders that suit your printer", machines);
     const name = input("text", c.printerName, { placeholder: "Voron 2.4" });
     name.addEventListener("input", () => commit((d) => { d.printerName = name.value.trim(); }));
     const kin = seg([["bed-z", "Bed moves in Z"], ["gantry-z", "Gantry moves in Z"]], c.kinematics, (v) => commit((d) => { d.kinematics = v; }));
@@ -658,6 +673,48 @@ const BUILDERS = {
     }
     return embedClassicSettings(host, "settings_plugin_pluginmanager", false,
       "Install, update, turn on or off and remove plugins. Each plugin's own pages and panels are under Plugins in the navigation.");
+  },
+
+  "plugin-places"(host) {
+    if (!pluginHost.allowed()) {
+      section(host, "Plugins on pages", "", html`<div class="callout is-info">${raw(icon("lock"))}<div>Your account can't see OctoPrint's plugin pages.</div></div>`);
+      return;
+    }
+    const body = html`<div class="col gap-3"><p class="hint" data-ref="state">${raw(icon("refresh", "i i-sm spin"))} Looking at your installed plugins…</p></div>`;
+    section(host, "Plugins on pages", "where each plugin's tabs, panels and top-bar buttons show",
+      body, html`<p class="hint">Plugins work exactly as in classic OctoPrint wherever they're placed. Every one is also on the Plugins screen. This is shared by everyone who uses this printer.</p>`);
+    const KIND = { tab: "Page", panel: "Panel", navbar: "Top-bar button" };
+    const where = (p) => (config.data.pluginPlaces || {})[pluginHost.partKey(p)] || "";
+    const choose = async (p, value) => {
+      try {
+        await config.update((d) => {
+          const all = { ...(d.pluginPlaces || {}) };
+          if (value) all[pluginHost.partKey(p)] = value; else delete all[pluginHost.partKey(p)];
+          d.pluginPlaces = all;
+        });
+        toast.ok("Saved", `${p.name}: ${value ? (pluginHost.PLACES.find(([id]) => id === value)?.[1] || "hidden") : "automatic"}`, { timeout: 1600 });
+      } catch (e) { toast.fail("Couldn't save that", e); }
+    };
+    const draw = (parts) => {
+      const list = [...parts.tabs, ...parts.panels, ...parts.navbar];
+      if (!list.length) { body.innerHTML = `<p class="hint">None of your installed plugins adds a page, a panel or a top-bar button.</p>`; return; }
+      const table = html`<table class="edit-table plug-places"><thead><tr><th>Plugin part</th><th>Kind</th><th>Shows on</th></tr></thead><tbody></tbody></table>`;
+      const tb = table.querySelector("tbody");
+      for (const p of list) {
+        const options = p.kind === "navbar"
+          ? [["", "Top bar"], ["hidden", "Hidden (Plugins screen only)"]]
+          : [["", `Automatic (${(pluginHost.PLACES.find(([id]) => id === pluginHost.autoPlaceOf(p))?.[1]) || "Plugins screen"})`], ...pluginHost.PLACES.filter(([id]) => p.kind === "tab" || id !== "rail")];
+        const sel = html`<select class="select" aria-label="Where ${p.name} shows">${options.map(([v, l]) => html`<option value="${v}" ${where(p) === v ? "selected" : ""}>${l}</option>`)}</select>`;
+        sel.addEventListener("change", () => choose(p, sel.value));
+        const tr = html`<tr><td><b>${p.name}</b><div class="hint mono">${p.plugin}</div></td><td class="muted">${KIND[p.kind]}</td><td></td></tr>`;
+        tr.lastElementChild.append(sel);
+        tb.append(tr);
+      }
+      body.replaceChildren(table);
+    };
+    const off = pluginHost.onParts(draw);
+    pluginHost.ready().catch((e) => { body.innerHTML = `<div class="callout is-err">${icon("alert")}<div>${esc(e.message || "OctoPrint's classic page didn't load.")}</div></div>`; });
+    return off;
   },
 
   octoprint(host) {

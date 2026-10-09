@@ -54,6 +54,16 @@ function onLine(raw) {
       case "axes-noise":
         bus.emit("klipper:noise", data);
         break;
+      case "screw":
+        bus.emit("klipper:screw", data);
+        break;
+      case "extruder-result":
+        store.patch("klipper", { lastExtruder: { ...data, at: Date.now() } });
+        bus.emit("klipper:extruder", data);
+        break;
+      case "print-mode":
+        store.patch("klipper", { printMode: data.mode });
+        break;
       case "pending-config":
         store.patch("klipper", { pendingConfig: true });
         break;

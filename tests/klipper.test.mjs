@@ -83,5 +83,22 @@ test("bed mesh output (bed_mesh.py format, multi-line respond_info)", () => {
   assert.equal(parseMesh(["Recv: // Mesh Leveling Probed Z positions:", "Recv: // 1 2 3", "Recv: // 1 2"]), null);   // ragged rows
 });
 
+test("bed screws (screws_tilt_adjust.py format)", () => {
+  const [base] = recognise("Recv: // front left (base) : x=30.0, y=48.0, z=2.48750");
+  assert.equal(base.id, "screw"); assert.equal(base.data.base, true); assert.equal(base.data.dir, null);
+  const [cw] = recognise("Recv: // front right : x=200.0, y=48.0, z=2.36250 : adjust CW 00:12");
+  assert.equal(cw.data.name, "front right"); assert.equal(cw.data.dir, "CW"); assert.equal(cw.data.clock, "00:12");
+  assert.ok(Math.abs(cw.data.turns - 0.2) < 1e-9);
+  const [ccw] = recognise("Recv: // back left : x=30.0, y=218.0, z=2.6 : adjust CCW 01:05");
+  assert.equal(ccw.data.dir, "CCW"); assert.ok(Math.abs(ccw.data.turns - 65 / 60) < 1e-9);
+  assert.equal(recognise("Recv: // probe at 30.000,48.000 is z=2.487500").filter((h) => h.id === "screw").length, 0);
+});
+
+test("E3NG config messages (EXTRUDER_RESULT, PRINT_MODE)", () => {
+  const [x] = recognise("Recv: // Extruded 97.5 mm of 100. rotation_distance 34.406 -> 33.546. Put the new value in [extruder] in printer.cfg and RESTART.");
+  assert.deepEqual(x.data, { moved: 97.5, old: 34.406, next: 33.546 });
+  assert.equal(recognise("Recv: // Print mode: quiet")[0].data.mode, "quiet");
+});
+
 if (failures) { console.log(`\n${failures} failed`); process.exit(1); }
 console.log("\nall klipper parser tests passed");

@@ -17,6 +17,7 @@ import { watchThumbs, startWithChecks } from "mf/ui/panels/job.js";
 import { config } from "mf/core/config.js";
 import { queue, addToQueue, removeFromQueue, moveInQueue, clearQueue, startNext } from "mf/core/queue.js";
 import { isPrinting } from "mf/core/status.js";
+import { mountPluginDock } from "mf/ui/panels/plugindock.js";
 
 const SORTS = {
   "date-desc": ["Newest first", (a, b) => (b.date || 0) - (a.date || 0)],
@@ -399,9 +400,10 @@ export default {
       render();
     }
     load();
+    const dock = mountPluginDock(el, "files");
     return {
       onRoute: goRoute,
-      unmount() { offBus(); offQueue.forEach((o) => o()); io.disconnect(); setFolderProvider(() => ""); },
+      unmount() { offBus(); offQueue.forEach((o) => o()); io.disconnect(); setFolderProvider(() => ""); dock.dispose(); },
     };
   },
 };

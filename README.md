@@ -24,7 +24,16 @@ Works with OctoPrint 1.9 and newer (developed against 1.11) on Python 3.7+. Ther
 
 **Tune**: quad gantry level and Z tilt results, probe accuracy, the paper test, a bed mesh heat map with profiles, PID tuning, pressure advance, input shaper results with a ready-to-paste `[input_shaper]` block, heat soak, calculators, usage statistics and maintenance reminders based on real print hours.
 
-**Plugins**: OctoPrint's Plugin Manager (also under Settings), plus every installed plugin's own tabs, sidebar panels and settings pages. A Plugins panel on the Print page shows all plugin sidebar panels at once, in both looks. They run in OctoPrint's classic page inside MakerPrint, so they work exactly as they do in the classic interface.
+**Plugins**: every installed plugin shows up where it belongs, working exactly as in classic OctoPrint:
+- **Top-bar buttons** (PSU Control's power switch, layer progress, OctoKlipper's status, health warnings ...) sit in MakerPrint's top bar, live. Pressing one presses the real button, and its menus and dialogs open over the page. On a phone they're under *More*.
+- **Plugin pages and panels** go on the page that fits: Bed Level Visualizer and OctoKlipper on Tune, Octolapse on Timelapse, the G-code viewer on Files, sidebar panels on Print, and so on. A plugin MakerPrint doesn't know gets its own entry in the menu, as in classic OctoPrint. **Settings > Plugins on pages** moves any of them.
+- **Custom controls** (the buttons from `config.yaml` and from plugins that used to sit under the classic Control tab) are drawn on the Control page.
+- Plugins' pop-up notifications arrive as MakerPrint notifications, and a plugin's setup wizard gets a nudge to finish it in the classic page.
+- The **Plugins** screen lists all of it, with the Plugin Manager and every plugin's settings.
+
+Behind all of this is one copy of OctoPrint's classic page, started once in the background and laid over whichever spot needs it, so it costs one page load per session and nothing more.
+
+**Klipper config for the E3NG**: [`klipper/`](klipper/README.md) has a complete, tested Klipper setup for an Ender 3 NG (CoreXY) on the stock Creality 4.2.2 board with a BLTouch, a Volcano and an ADXL345: printer.cfg, print / filament / pause macros, every calibration as a macro (and a wizard), an installer for the Pi, and the board firmware. **Settings > Printer > Machine** switches MakerPrint's buttons, presets and reminders to match it, and Tune gets a step-by-step calibration panel.
 
 **Two looks** (Settings > Appearance): *MakerPrint*, dark graphite with the logo colours and the essentials on the Print page, and *Studio*, a light black-white-and-grey workspace with a top navigation bar and every panel on the Print page: toolhead position and moves, a console, all macros, Klipper state and last calibration results, the host computer (storage, Pi power, restart and shutdown) and usage. **Settings > Print page** picks the panels and their order for each look.
 
@@ -124,6 +133,8 @@ Don't forward a port on your router to OctoPrint: anything that can reach it can
 
 ## Development
 
+To work on it with Claude Code right on the printer's Raspberry Pi (edits show up live), see [docs/claude-code-on-pi.md](docs/claude-code-on-pi.md).
+
 ```bash
 dev/dev-instance.sh setup     # a virtualenv with OctoPrint, this plugin and a throwaway user
 dev/dev-instance.sh bg        # http://127.0.0.1:5055 with OctoPrint's virtual printer
@@ -138,6 +149,7 @@ Tests:
 
 ```bash
 python3 -m unittest discover -s tests -v   # G-code metadata, layer scan, stores, notifications
+dev/klipper-check.sh <klipper> <dict>      # the E3NG Klipper config and every macro, through Klipper itself
 node tests/klipper.test.mjs                # Klipper output parsers, using Klipper's own message formats
 node tests/prompts.test.mjs                # macro prompts
 node tests/worker.test.mjs                 # the toolpath parser

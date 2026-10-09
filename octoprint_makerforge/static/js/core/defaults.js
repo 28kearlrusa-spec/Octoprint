@@ -61,6 +61,13 @@ export const DEFAULT_CONFIG = {
     { id: "sb", name: "Toolhead", klipper: "sb_leds", enabled: false },
   ],
 
+  // Which machine setup the buttons came from (Settings > Printer): voron | e3ng
+  machine: "voron",
+
+  // Where each plugin's tabs, panels and top-bar buttons show: {"tab:tab_plugin_x": "tune"}.
+  // Anything not listed goes where plugin-host.js's autoPlaceOf() puts it.
+  pluginPlaces: {},
+
   // Files waiting to be printed, in order: [{id, path, name, addedAt}]
   queue: [],
 

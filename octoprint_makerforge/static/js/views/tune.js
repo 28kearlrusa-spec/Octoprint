@@ -10,6 +10,8 @@ import { can } from "mf/core/auth.js";
 import { levelingPanel, meshPanel } from "mf/ui/tools/leveling.js";
 import { pidPanel, paPanel, shaperPanel, limitsPanel, soakPanel, calcPanel } from "mf/ui/tools/calibrate.js";
 import { maintenancePanel } from "mf/ui/tools/maintenance.js";
+import { machineCalPanel } from "mf/ui/tools/machine-cal.js";
+import { mountPluginDock } from "mf/ui/panels/plugindock.js";
 
 export default {
   id: "tune",
@@ -20,6 +22,7 @@ export default {
     el.append(head, pending, grid);
 
     const parts = [];
+    parts.push(machineCalPanel(grid));
     parts.push(klipperPanel(grid));
     parts.push(levelingPanel(grid));
     const meshHost = html`<div class="wide"></div>`;
@@ -39,6 +42,7 @@ export default {
     });
     const off = store.on("klipper", () => { pending.hidden = !store.get("klipper.pendingConfig"); });
     pending.hidden = !store.get("klipper.pendingConfig");
+    parts.push(mountPluginDock(el, "tune"));
     return { unmount() { off(); parts.forEach((p) => p.dispose?.()); } };
   },
 };

@@ -660,11 +660,20 @@
 .up-item .up-name b { display: block; font-weight: 600; }
 .up-item .up-name span { color: var(--tx-3); font-size: var(--fs-sm); }
 .up-log { max-height: 260px; overflow: auto; margin: 0; padding: var(--s-3); background: var(--bg-0); border: 1px solid var(--line-2); font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--tx-2); }
-/* Print page: plugin panels */
-.dash-plug { position: relative; }
-.dash-plug .classic-frame { height: 0; }
-.dash-plug .classic-frame.is-ready { height: auto; }
-.dash-plug-state { min-height: 96px; padding: var(--s-4); display: flex; align-items: center; gap: 8px; }
+/* ~~ plugins on every page: one shared classic page laid over the spot that shows it ~~~~~~~ */
+.plugin-layer { position: fixed; z-index: calc(var(--z-sticky) - 2); left: 0; top: 0; width: 0; height: 0; contain: strict; }
+.plugin-layer[hidden] { display: block !important; visibility: hidden; pointer-events: none; }
+.plugin-layer.is-modal { z-index: var(--z-dialog); }
+.plugin-layer.is-modal .classic-frame { background: transparent; }
+.plugin-layer .classic-frame { width: 100%; height: 100%; color-scheme: normal; }   /* same as the page inside, so it can be see-through */
+.plug-dock .panel-head { flex-wrap: wrap; }
+.plug-chips { flex-wrap: wrap; }
+.plug-chips[hidden] { display: none; }
+.plug-slot { position: relative; min-height: 96px; }
+.plug-slot-state { min-height: 96px; padding: var(--s-4); display: flex; align-items: center; gap: 8px; margin: 0; }
+.plug-where { margin-left: auto; padding-left: var(--s-2); color: var(--tx-3); font-size: var(--fs-xs); white-space: nowrap; }
+.plugins-layout .set-nav a { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dash .plug-dock, .view > .plug-dock, .view .plug-dock { margin-top: var(--s-4); }
 
 /* job: live layer and pause-at-layer */
 .job-live { display: flex; align-items: flex-end; gap: var(--s-4); }
@@ -704,3 +713,28 @@
 .lapse-frame { aspect-ratio: 16 / 9; background: #000; display: grid; place-items: center; overflow: hidden; }
 .lapse-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .lapse-bar { align-items: center; }
+
+/* ~~ Control: OctoPrint's custom controls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+.a-custom { grid-column: 1 / -1; }
+.cc-body { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-4); }
+.cc-group h3 { margin: 0 0 var(--s-2); font-size: var(--fs-sm); color: var(--tx-2); }
+.cc-items { display: flex; flex-direction: column; gap: var(--s-2); }
+.cc-group.is-row > .cc-items { flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+.cc-group .cc-group { padding-left: var(--s-3); border-left: 1px solid var(--line-1); }
+.cc-ctl { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-2); }
+.cc-in { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--tx-2); }
+.cc-in .input { width: 120px; }
+.cc-in output { font-variant-numeric: tabular-nums; color: var(--tx-1); }
+.cc-out { font-size: var(--fs-sm); }
+
+/* ~~ Tune: calibration steps (E3NG config) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+.cal-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--s-2) var(--s-4); }
+.cal-steps li { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line-1); }
+.cal-n { flex: 0 0 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--bg-3); color: var(--tx-2); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.cal-h { margin: var(--s-2) 0; font-size: var(--fs-sm); color: var(--tx-2); }
+.screw-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; max-width: 420px; background: var(--line-1); border: 1px solid var(--line-1); }
+.screw { padding: var(--s-2) var(--s-3); background: var(--bg-2); }
+.screw .k { color: var(--tx-3); font-size: var(--fs-xs); text-transform: capitalize; }
+.screw .v { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.screw.is-ok .v { color: var(--ok, #59c36a); }
+.screw.is-adjust .v { color: var(--warn, #e9a53a); font-weight: 600; }

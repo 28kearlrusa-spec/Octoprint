@@ -10,6 +10,7 @@ import { can } from "mf/core/auth.js";
 import { webcamInfo } from "mf/core/webcam.js";
 import * as router from "mf/core/router.js";
 import { watchThumbs } from "mf/ui/panels/job.js";
+import { mountPluginDock } from "mf/ui/panels/plugindock.js";
 
 const MODES = [["off", "Off"], ["zchange", "Each layer"], ["timed", "Timed"]];
 
@@ -141,6 +142,7 @@ export default {
 
     const offs = [bus.on("event:MovieDone", load), bus.on("event:MovieFailed", load), bus.on("event:CaptureStart", () => {}), bus.on("event:PrintDone", () => setTimeout(load, 3000)), store.on("timelapse", render)];
     load();
-    return { unmount() { offs.forEach((o) => o()); } };
+    const dock = mountPluginDock(el, "timelapse");
+    return { unmount() { offs.forEach((o) => o()); dock.dispose(); } };
   },
 };

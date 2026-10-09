@@ -4,8 +4,18 @@
 // it adds to the frame. The frame is same-origin, so this needs no cooperation from plugins.
 import { BASE } from "mf/core/api.js";
 
-// Core tabs MakerPrint already has its own screens for. Everything else is a plugin's.
+// Core parts MakerPrint already has its own screens for. Everything else is a plugin's.
 const CORE_TABS = new Set(["temp", "control", "term", "timelapse"]);
+const CORE_PANELS = new Set(["connection_wrapper", "state_wrapper", "files_wrapper"]);
+const CORE_NAVBAR = new Set(["navbar_offlineindicator", "navbar_settings", "navbar_systemmenu", "navbar_login", "navbar_plugin_makerforge"]);
+
+/** The plugin an element id belongs to: "tab_plugin_octolapse" -> "octolapse". */
+export function pluginOf(id) {
+  return String(id || "")
+    .replace(/^(navbar|sidebar|tab|settings|usersettings)_plugin_/, "")
+    .replace(/_(wrapper|link)$/, "")
+    .replace(/_\d+$/, "");
+}
 
 const CROP_CSS = `
 html.mf-embed body { padding: 0 !important; }
@@ -14,6 +24,13 @@ html.mf-embed:not([data-mf-mode="classic"]) #navbar,
 html.mf-embed:not([data-mf-mode="classic"]) .footer { display: none !important; }
 html.mf-embed:not([data-mf-mode="classic"]) .octoprint-container { width: auto !important; max-width: none !important; margin: 0 !important; padding: 16px !important; }
 html.mf-embed:not([data-mf-mode="classic"]) .octoprint-container > .row { margin-left: 0 !important; }
+
+/* a plugin's dialog over MakerPrint: only the dialog and its dimmed backdrop show */
+html.mf-embed.mf-dialog, html.mf-embed.mf-dialog body { background: transparent !important; }
+html.mf-embed.mf-dialog #navbar, html.mf-embed.mf-dialog .octoprint-container, html.mf-embed.mf-dialog .footer { visibility: hidden !important; }
+
+/* plugins' pop-up notifications show as MakerPrint's own (see plugin-host.js) */
+html.mf-embed:not([data-mf-mode="classic"]) .ui-pnotify { display: none !important; }
 
 /* OctoPrint's setup wizard belongs to the full classic page, not to one embedded part */
 html.mf-embed:not([data-mf-mode="classic"]) #wizard_dialog { display: none !important; }
@@ -37,6 +54,25 @@ html.mf-embed[data-mf-mode="panels"] .octoprint-container .tabbable { display: n
 html.mf-embed[data-mf-mode="panels"] #sidebar { width: 100% !important; margin-left: 0 !important; float: none !important; }
 html.mf-embed[data-mf-mode="panels"] #sidebar > .accordion-group:not([id^="sidebar_plugin_"]) { display: none !important; }
 html.mf-embed[data-mf-mode="panels"] body { background: transparent !important; }
+
+/* several sidebar panels, stacked and open (a page's plugin panels) */
+html.mf-embed[data-mf-mode="panelset"] .octoprint-container { padding: 0 !important; }
+html.mf-embed[data-mf-mode="panelset"] .octoprint-container .tabbable { display: none !important; }
+html.mf-embed[data-mf-mode="panelset"] #sidebar { width: 100% !important; margin-left: 0 !important; float: none !important; }
+html.mf-embed[data-mf-mode="panelset"] #sidebar > .accordion-group:not(.mf-show) { display: none !important; }
+html.mf-embed[data-mf-mode="panelset"] body { background: transparent !important; }
+
+/* one top-bar item with its dropdown open (a plugin's button in MakerPrint's top bar) */
+html.mf-embed[data-mf-mode="navbar"] .octoprint-container,
+html.mf-embed[data-mf-mode="navbar"] .footer,
+html.mf-embed[data-mf-mode="navbar"] #navbar .brand { display: none !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar { display: block !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .container { width: auto !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .nav > li:not(.mf-show) { display: none !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .nav-collapse { height: auto !important; overflow: visible !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .nav.pull-right { float: left !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .dropdown-menu { position: static !important; display: block; float: none !important; max-height: none !important; box-shadow: none !important; }
+html.mf-embed[data-mf-mode="navbar"] #navbar .nav > li:not(.open) .dropdown-menu { display: none; }
 
 /* settings: the dialog becomes the page */
 html.mf-embed[data-mf-mode="settings"] .octoprint-container { visibility: hidden !important; }
@@ -105,20 +141,38 @@ export function createClassicFrame(host, { timeoutMs = 90000, pinScroll = false 
   function settingsVM() { return win.OctoPrint.coreui.viewmodels.settingsViewModel; }
   function openSettings(id) { try { settingsVM().show(id); } catch { /* not allowed for this user */ } }
 
-  /** What plugins added to the classic page: their tabs, sidebar panels and settings pages. */
+  /**
+   * What plugins added to the classic page: their tabs, sidebar panels, top-bar items and
+   * settings pages. Each is {kind, id, name, plugin}; `plugin` is the plugin's identifier.
+   */
   function parts() {
     const q = (s) => Array.from(doc.querySelectorAll(s));
     const tabs = q("#tabs a[href^='#']")
       .map((a) => ({ kind: "tab", id: a.getAttribute("href").slice(1), name: textOf(a) }))
       .filter((t) => t.id && t.name && !CORE_TABS.has(t.id) && doc.getElementById(t.id) && shown(doc.querySelector(`#tabs a[href="#${t.id}"]`)?.closest("li"), win));
-    const panels = q("#sidebar > .accordion-group[id^='sidebar_plugin_']")
-      .filter((g) => shown(g, win))
-      .map((g) => ({ kind: "panel", id: g.id, name: textOf(g.querySelector(".accordion-heading")) || g.id.replace(/^sidebar_plugin_|_wrapper$/g, "") }));
+    const panels = q("#sidebar > .accordion-group[id]")
+      .filter((g) => !CORE_PANELS.has(g.id) && shown(g, win))
+      .map((g) => ({ kind: "panel", id: g.id, name: textOf(g.querySelector(".accordion-heading")) || pluginOf(g.id) }));
+    const navbar = q("#navbar .nav > li[id]")
+      .filter((li) => !CORE_NAVBAR.has(li.id))
+      .map((li) => ({ kind: "navbar", id: li.id, name: navbarName(li) }));
     const settings = q("#settings_dialog_menu a[href^='#settings_plugin_']")
       .map((a) => ({ kind: "settings", id: a.getAttribute("href").slice(1), name: textOf(a) }))
       .filter((s) => s.name);
     const firstSettings = doc.querySelector("#settings_dialog_menu a[href^='#settings_']")?.getAttribute("href")?.slice(1) || null;
-    return { tabs, panels, settings, firstSettings };
+    for (const p of [...tabs, ...panels, ...navbar, ...settings]) p.plugin = pluginOf(p.id);
+    return { tabs, panels, navbar, settings, firstSettings };
+  }
+
+  // A top-bar item is often only an icon or a number: its tooltip or the plugin's name is its label
+  function navbarName(li) {
+    const t = textOf(li);
+    const plugin = pluginOf(li.id).replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+    if (t && /^[\d\s!?.:-]{1,4}$/.test(t)) return `${plugin}: ${t}`;
+    if (t) return t.slice(0, 40);
+    const titled = li.querySelector("[title], [data-original-title], [aria-label]");
+    const tip = titled && (titled.getAttribute("title") || titled.getAttribute("data-original-title") || titled.getAttribute("aria-label"));
+    return (tip || plugin).slice(0, 40);
   }
 
   /** Show one part: {kind: "tab"|"panel"|"settings"|"classic", id}. */
@@ -138,12 +192,44 @@ export function createClassicFrame(host, { timeoutMs = 90000, pinScroll = false 
     if (part.kind === "panels") {
       for (const g of doc.querySelectorAll("#sidebar > .accordion-group[id^='sidebar_plugin_']")) win.$(g.querySelector(".accordion-body")).collapse("show");
     }
+    if (part.kind === "panelset") {
+      const want = new Set(part.ids || []);
+      for (const g of doc.querySelectorAll("#sidebar > .accordion-group")) {
+        g.classList.toggle("mf-show", want.has(g.id));
+        if (want.has(g.id)) win.$(g.querySelector(".accordion-body")).collapse("show");
+      }
+    }
+    if (part.kind === "navbar") {
+      for (const li of doc.querySelectorAll("#navbar .nav > li")) li.classList.toggle("mf-show", li.id === part.id);
+    }
     win.scrollTo(0, 0);
+  }
+
+  /** The element behind a part, inside the frame. */
+  function element(part) {
+    if (part.kind === "navbar" || part.kind === "panel") return doc.getElementById(part.id);
+    if (part.kind === "tab") return doc.getElementById(part.id);
+    return null;
+  }
+
+  /** Is one of OctoPrint's (or a plugin's) dialogs open in the frame? (Not the setup wizard,
+   * which belongs to the full classic page and is hidden here.) */
+  function modalOpen() {
+    try { return !!doc.querySelector(".modal.in:not(#wizard_dialog)") && doc.body.classList.contains("modal-open"); } catch { return false; }
+  }
+
+  /** Is OctoPrint's setup wizard waiting (usually a newly installed plugin's first-run steps)? */
+  function wizardOpen() {
+    try { return !!doc.querySelector("#wizard_dialog.in"); } catch { return false; }
   }
 
   /** Height of what is showing, for a frame that grows with its content. */
   function contentHeight() {
-    try { return Math.ceil(doc.querySelector("#sidebar")?.getBoundingClientRect().height || doc.body.scrollHeight); } catch { return 0; }
+    try {
+      const mode = doc.documentElement.dataset.mfMode;
+      if (mode === "navbar") return Math.ceil(doc.querySelector("#navbar")?.getBoundingClientRect().height || 0);
+      return Math.ceil(doc.querySelector("#sidebar")?.getBoundingClientRect().height || doc.body.scrollHeight);
+    } catch { return 0; }
   }
 
   // A frame further down a page can still pull the page to itself while OctoPrint starts
@@ -168,6 +254,11 @@ export function createClassicFrame(host, { timeoutMs = 90000, pinScroll = false 
     contentHeight,
     parts,
     show,
+    element,
+    modalOpen,
+    wizardOpen,
+    get win() { return win; },
+    get doc() { return doc; },
     destroy() { alive = false; unpin(); frame.remove(); },
   };
 }

@@ -1,5 +1,5 @@
 // The frame around every screen: rail, top bar, tab bar, status LED, gantry progress line.
-import { html, raw, refs, on } from "mf/core/dom.js";
+import { html, raw, refs, on, esc } from "mf/core/dom.js";
 import { store, bus } from "mf/core/store.js";
 import { boot } from "mf/core/api.js";
 import { icon } from "mf/ui/icons.js";
@@ -15,6 +15,8 @@ import { duration, num } from "mf/core/format.js";
 import { openConnect } from "mf/ui/connect.js";
 import { openClaude, claudeEnabled } from "mf/ui/claude.js";
 import { mountPip } from "mf/ui/pip.js";
+import { mountPluginTray } from "mf/ui/plugin-tray.js";
+import * as plugins from "mf/core/plugin-host.js";
 
 export const NAV = [
   { id: "print", label: "Print", icon: "cube" },
@@ -40,6 +42,7 @@ export function mountShell(root) {
         <nav class="rail-nav" data-ref="nav">
           <i class="tnut" data-ref="tnut"></i>
           ${raw(NAV.map(linkHtml).join(""))}
+          <div class="rail-plugins" data-ref="railPlugins"></div>
         </nav>
         <div class="rail-foot">
           <button class="rail-link rail-claude" data-ref="claude" aria-label="Open Claude" data-tip="Open Claude in a side window" hidden>${raw(icon("spark"))}<span>Claude</span></button>
@@ -82,7 +85,8 @@ export function mountShell(root) {
 
   // ~~ nav highlight + sliding T-nut ~~
   function markActive(route) {
-    const id = route?.id || "print";
+    // a plugin's own page (#/p/<tab id>) lights up that plugin's entry
+    const id = route?.id === "p" ? `p:${route.rest?.[0] || ""}` : route?.id || "print";
     el.querySelectorAll(".rail-link[data-id]").forEach((a) => {
       if (a.dataset.id === id) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
@@ -190,11 +194,28 @@ export function mountShell(root) {
 
   const offPip = mountPip(el);
 
+  // ~~ plugins: their top-bar buttons, and a menu entry for each plugin page ~~
+  const tray = mountPluginTray(el.querySelector(".top-actions"));
+  const icons = new Map([["octolapse", "film"], ["bedlevelvisualizer", "mesh"], ["klipper", "cpu"], ["gcodeviewer", "layers"], ["spoolmanager", "spool"], ["filamentmanager", "spool"], ["obico", "eye"], ["octoeverywhere", "wifi"], ["telegram", "bell"], ["resource_monitor", "activity"]]);
+  let railTabs = [];
+  const offParts = plugins.onParts(() => {
+    railTabs = plugins.railParts();
+    r.railPlugins.innerHTML = railTabs.map((t) =>
+      `<a class="rail-link" href="${esc(router.href("p", [t.id]))}" data-id="p:${esc(t.id)}" aria-label="${esc(t.name)}" data-tip="${esc(t.name)}">${icon(icons.get(t.plugin) || "plugin")}<span>${esc(t.name)}</span></a>`).join("");
+    markActive(router.currentRoute());
+  });
+  // the classic page behind all of this starts once the app itself has settled
+  const warmTimer = setTimeout(() => plugins.warm(), 1500);
+  moreExtras = () => [
+    ...railTabs.map((t) => ({ label: t.name, icon: icons.get(t.plugin) || "plugin", onClick: () => router.go("p", [t.id]) })),
+    ...tray.items().map((p) => ({ label: p.name, icon: "plugin", onClick: () => tray.press(p.id, r.more) })),
+  ];
+
   return {
     stage: el.querySelector("#stage"),
     el,
     markActive,
-    dispose() { offRoute(); offs.forEach((o) => o()); offPrefs(); offPip(); clearInterval(tick); },
+    dispose() { offRoute(); offs.forEach((o) => o()); offPrefs(); offPip(); offParts(); tray.dispose(); clearTimeout(warmTimer); moreExtras = () => []; clearInterval(tick); },
   };
 }
 
@@ -229,9 +250,13 @@ export function userMenu(anchor) {
   ], { align: "end" });
 }
 
+let moreExtras = () => [];
+
 function moreMenu(anchor) {
+  const extras = moreExtras();
   openMenu(anchor, [
     ...NAV.filter((n) => !MOBILE_MAIN.includes(n.id)).map((n) => ({ label: n.label, icon: n.icon, onClick: () => router.go(n.id) })),
+    ...(extras.length ? [{ header: "Plugins" }, ...extras, { sep: true }] : []),
     { label: "Settings", icon: "settings", onClick: () => router.go("settings") },
     claudeEnabled(prefs.get("claude")) && { label: "Claude", icon: "spark", onClick: () => openClaude(prefs.get("claude")) },
     { sep: true },

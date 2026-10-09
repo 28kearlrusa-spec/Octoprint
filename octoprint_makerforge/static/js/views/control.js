@@ -11,6 +11,8 @@ import { availability, runMacro, grouped, macroIcon, openMacroEditor, isPrinting
 import { setRangeFill } from "mf/ui/panels/quicktune.js";
 import { toast } from "mf/ui/toast.js";
 import { seriesColor } from "mf/ui/chart.js";
+import { mountPluginDock } from "mf/ui/panels/plugindock.js";
+import { mountCustomControls } from "mf/ui/panels/customcontrols.js";
 
 const XY_STEPS = [0.1, 1, 10, 50, 100];
 const Z_STEPS = [0.025, 0.1, 1, 10];
@@ -24,11 +26,12 @@ export default {
     el.innerHTML = `<div class="view-head"><h1>Control</h1></div>`;
     const grid = html`<div class="ctl"></div>`;
     el.append(grid);
-    parts.push(jogPanel(grid), extruderPanel(grid), macroPanel(grid), fansPanel(grid));
+    parts.push(jogPanel(grid), extruderPanel(grid), macroPanel(grid), fansPanel(grid), mountCustomControls(grid));
 
     // the head's position is worth knowing while you are moving it
     const poll = setInterval(() => { if (!document.hidden) refreshPos(); }, 6000);
     refreshPos();
+    parts.push(mountPluginDock(el, "control"));
     return { unmount() { clearInterval(poll); parts.forEach((p) => p.dispose()); } };
   },
 };
