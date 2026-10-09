@@ -47,6 +47,12 @@ const E3NG = {
     { id: "mesh-clear", name: "Clear mesh", icon: "mesh", cat: "Levelling", gcode: "BED_MESH_CLEAR", needs: "BED_MESH_CLEAR" },
     { id: "screws", name: "Bed screws", icon: "wrench", cat: "Levelling", gcode: "BED_SCREWS", needs: "BED_SCREWS" },
     { id: "zoffset", name: "Z offset (paper test)", icon: "zoffset", cat: "Levelling", gcode: "PROBE_Z_OFFSET", needs: "PROBE_Z_OFFSET" },
+    // the BLTouch through Klipper (the OctoPrint BLTouch plugin's buttons are Marlin commands)
+    { id: "bl-down", name: "Probe pin down", icon: "probe", cat: "BLTouch", gcode: "BLTOUCH_DEBUG COMMAND=pin_down", needs: "BLTOUCH_DEBUG" },
+    { id: "bl-up", name: "Probe pin up", icon: "probe", cat: "BLTouch", gcode: "BLTOUCH_DEBUG COMMAND=pin_up", needs: "BLTOUCH_DEBUG" },
+    { id: "bl-test", name: "Probe self-test", icon: "probe", cat: "BLTouch", gcode: "BLTOUCH_DEBUG COMMAND=self_test", needs: "BLTOUCH_DEBUG" },
+    { id: "bl-reset", name: "Probe reset (red blink)", icon: "refresh", cat: "BLTouch", gcode: "BLTOUCH_DEBUG COMMAND=reset", needs: "BLTOUCH_DEBUG" },
+    { id: "bl-query", name: "Probe state", icon: "info", cat: "BLTouch", gcode: "QUERY_PROBE", needs: "QUERY_PROBE" },
 
     { id: "wizard", name: "Calibration wizard", icon: "list-checks", cat: "Calibrate", gcode: "CALIBRATION_WIZARD", needs: "CALIBRATION_WIZARD" },
     { id: "pid-hotend", name: "PID hotend", icon: "flame", cat: "Calibrate", gcode: "PID_HOTEND TEMP={temp|220}", needs: "PID_HOTEND" },

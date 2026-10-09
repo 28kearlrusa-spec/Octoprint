@@ -236,6 +236,9 @@ const HOMES = {
   // files
   gcodeviewer: "files", gcode: "files", prettygcode: "files", uploadanything: "files", filemanager: "files",
   arc_welder: "files", slicer: "files", cura: "files", prusaslicerthumbnails: "files",
+  // the plugins on the MakerPrint E3NG's Pi
+  bltouch: "tune", costestimation: "print", printhistory: "files", printtimegenius: "files",
+  powerfailure: "print", tplinksmartplug: "print", uploadmanager: "files", file_manager: "files",
   // control
   gcode_macro: "control", custombuttons: "control", customcontrol: "control", macro: "control",
   consolidate_temp_control: "control", printhead_control: "control", gcodesystemcommands: "control",
@@ -248,14 +251,14 @@ export const partKey = (p) => `${p.kind}:${p.id}`;
 
 // "klipper_main" (OctoKlipper's tab) belongs where "klipper" does
 function homeOf(plugin) {
-  let id = String(plugin || "");
+  let id = String(plugin || "").toLowerCase();   // "PrintTimeGenius", "BLTouch"
   while (id) {
     if (HOMES[id]) return HOMES[id];
     const cut = id.lastIndexOf("_");
     if (cut < 1) break;
     id = id.slice(0, cut);
   }
-  return HOMES[String(plugin || "").toLowerCase()] || null;
+  return null;
 }
 
 /** Where a part shows: the person's choice in Settings, else autoPlaceOf(). */

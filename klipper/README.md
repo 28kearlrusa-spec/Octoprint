@@ -33,7 +33,7 @@ Not sure which chip your board has? It doesn't matter. The STM32F103 build runs 
 
 Lines marked `>>> CHECK` in `printer.cfg` are these. Go in this order. `CALIBRATION_WIZARD` (Terminal, or the Macros panel) shows the same steps as buttons.
 
-1. **Endstops.** Send `QUERY_ENDSTOPS` with nothing pressed (all `open`), then hold each switch and send it again (that one `TRIGGERED`). The E3NG homes X to the right and Y to the back. If yours home to the left or front, set `position_endstop: 0`, `position_min: 0` and `homing_positive_dir: false` for that axis.
+1. **Endstops.** Yours are confirmed: X is the microswitch on the carriage (wired COM + NC) and homes right, Y sits on the back XY joint and homes back. Send `QUERY_ENDSTOPS` with nothing pressed (both `open`), then hold each switch and send it again (that one `TRIGGERED`). If one reads backwards, its wires are on COM + NO: move the wire to NC.
 2. **Motor directions:** `DIRECTION_TEST`. Move the head to the middle by hand first. It moves without homing, so keep a hand on the power switch. CoreXY fixes:
    - X+ goes left: invert both `dir_pin`s (add or remove the `!`)
    - X+ goes towards the back: invert `stepper_y`'s `dir_pin`
@@ -95,6 +95,18 @@ The other limit is the hotend: a Volcano on the stock 40 W heater melts about **
 ## Temperature limits
 
 The stock Ender 3 V2 hotend has a PTFE tube down to the nozzle, and PTFE gives off fumes above about 240 °C. `max_temp` is 250 and the MakerPrint material presets stay at 240 or below. With an all-metal heat break you can raise `max_temp` to 285.
+
+## Your OctoPrint plugins with Klipper
+
+| Plugin | With Klipper |
+| --- | --- |
+| **BLTouch Plugin** | **Turn it off.** Its buttons send Marlin commands (`M280`, `M401`) that Klipper ignores. The same buttons are in MakerPrint under Macros > BLTouch, using Klipper's `BLTOUCH_DEBUG`. |
+| **Power Failure Recovery** | **Turn it off, or test it before trusting it.** It was written for Marlin: to resume it re-homes and replays the file, and on this printer homing Z puts the probe down in the middle of the print. Klipper also forgets its position on power loss. |
+| **Cancel Objects** | Works, but Klipper's own object cancelling (`[exclude_object]`, already on, with "Label objects" in the slicer) is more reliable. Keep Cancel Objects for now: its panel is on MakerPrint's Print page. To use Klipper's instead, send `EXCLUDE_OBJECT NAME=<object>` from the Terminal (`EXCLUDE_OBJECT_STATUS` lists the names). |
+| **OctoKlipper** | Needed. `install.sh` points it at Klipper's port, config folder and log. Its Klipper page is on MakerPrint's Tune page. |
+| **TP-Link Smartplug** | Handy as the printer's power switch (its button is in MakerPrint's top bar). After switching the printer on, MakerPrint reconnects. If Klipper says `mcu 'mcu': Unable to connect`, press Firmware restart. |
+| **Firmware Check, File Check** | Fine to keep. |
+| **PrintTimeGenius, Cost Estimation, Print History, Slicer Thumbnails, Resource Monitor, WiFi Status** | Fine. They show up on the Files, Print and top-bar spots in MakerPrint. |
 
 ## OctoPrint settings `install.sh` makes
 
